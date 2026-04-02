@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Snake IDE</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1e1e1e;color:#d4d4d4;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+/* HEADER */
+#hdr{height:36px;background:#323233;display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;border-bottom:1px solid #252526;}
+#hdr-logo{display:flex;align-items:center;gap:6px;font-size:13px;color:#ccc;font-weight:500;}
+#run-btn{background:#0078d4;color:#fff;border:none;padding:4px 14px;cursor:pointer;border-radius:3px;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:5px;}
+#run-btn:hover{background:#106ebe;}
+#clear-btn{background:none;color:#858585;border:1px solid #555;padding:4px 10px;cursor:pointer;border-radius:3px;font-size:12px;font-family:inherit;}
+#clear-btn:hover{color:#ccc;border-color:#888;}
+#hdr-right{margin-left:auto;font-size:11px;color:#555;}
+/* BODY */
+#body{display:flex;flex:1;overflow:hidden;}
+/* SIDEBAR */
+#sidebar{width:200px;background:#252526;border-right:1px solid #333;display:flex;flex-direction:column;flex-shrink:0;}
+#sb-title{padding:8px 12px;font-size:10px;color:#bbb;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #333;font-weight:600;}
+#sb-actions{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid #333;}
+#sb-actions button{background:none;border:1px solid #444;color:#888;padding:3px 8px;cursor:pointer;border-radius:3px;font-size:11px;font-family:inherit;}
+#sb-actions button:hover{color:#ccc;border-color:#888;}
+#file-list{padding:4px 0;flex:1;overflow-y:auto;}
+.fi{padding:4px 8px 4px 16px;font-size:12px;cursor:pointer;color:#ccc;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.fi:hover{background:#2a2d2e;}
+.fi.active{background:#37373d;color:#fff;}
+.fi-dot{width:6px;height:6px;border-radius:50%;background:#e2c08d;display:none;}
+.fi.modified .fi-dot{display:block;}
+/* EDITOR AREA */
+#editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+/* TABS */
+#tabs{height:35px;background:#2d2d30;display:flex;align-items:flex-end;border-bottom:1px solid #333;flex-shrink:0;}
+.tab{padding:0 14px;height:35px;display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:#858585;border-right:1px solid #333;background:#2d2d30;white-space:nowrap;}
+.tab.active{background:#1e1e1e;color:#fff;border-top:1px solid #0078d4;}
+.tab-x{font-size:14px;color:#555;margin-left:4px;}
+.tab:hover .tab-x{color:#ccc;}
+/* EDITOR */
+#editor-wrap{flex:1;display:flex;overflow:hidden;position:relative;}
+#lnums{background:#1e1e1e;color:#555;padding:12px 10px 12px 8px;font-size:13px;line-height:1.5;text-align:right;user-select:none;overflow:hidden;flex-shrink:0;font-family:'Consolas','Courier New',monospace;border-right:1px solid #2a2a2a;min-width:44px;}
+#editor{flex:1;background:#1e1e1e;color:#d4d4d4;border:none;outline:none;padding:12px 12px 12px 14px;font-family:'Consolas','Courier New',monospace;font-size:13px;line-height:1.5;resize:none;tab-size:4;white-space:pre;overflow:auto;}
+/* STATUSBAR */
+#statusbar{height:22px;background:#007acc;color:#fff;padding:0 12px;font-size:11px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+/* TERMINAL */
+#terminal{height:200px;background:#0c0c0c;border-top:2px solid #007acc;display:flex;flex-direction:column;flex-shrink:0;}
+#term-hdr{background:#1e1e1e;padding:0 12px;height:35px;font-size:11px;color:#858585;border-bottom:1px solid #333;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.ptab{height:35px;display:flex;align-items:center;font-size:11px;color:#858585;cursor:pointer;border-bottom:2px solid transparent;padding:0 4px;}
+.ptab.active{color:#fff;border-bottom-color:#007acc;}
+#term-out{flex:1;overflow-y:auto;padding:4px 12px;font-size:12px;font-family:'Consolas','Courier New',monospace;}
+.tl{line-height:1.5;padding:1px 0;word-break:break-all;}
+.ok{color:#4ec9b0;}.err{color:#f44747;}.info{color:#75beff;}.warn{color:#dcdcaa;}.cmd{color:#569cd6;font-size:11px;}
+#term-in-row{display:flex;align-items:center;padding:3px 12px 5px;background:#111;gap:6px;border-top:1px solid #222;flex-shrink:0;}
+#term-prompt{color:#569cd6;font-size:12px;font-family:'Consolas',monospace;white-space:nowrap;}
+#term-in{background:transparent;border:none;outline:none;color:#ccc;flex:1;font-size:12px;font-family:'Consolas','Courier New',monospace;}
+/* FIND BAR */
+#find-bar{display:none;background:#252526;border-bottom:1px solid #333;padding:5px 10px;gap:6px;align-items:center;flex-shrink:0;}
+#find-bar.show{display:flex;}
+#find-bar input{background:#3c3c3c;border:1px solid #555;color:#d4d4d4;padding:3px 8px;font-size:12px;border-radius:2px;outline:none;font-family:'Consolas',monospace;width:200px;}
+#find-bar input:focus{border-color:#007acc;}
+.fb-btn{background:none;border:1px solid #555;color:#858585;padding:2px 8px;font-size:11px;border-radius:2px;cursor:pointer;}
+.fb-btn:hover{color:#ccc;border-color:#888;}
+#find-count{font-size:11px;color:#858585;min-width:60px;}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#424242;}
+::-webkit-scrollbar-thumb:hover{background:#555;}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <div id="hdr-logo">
+    <svg width="18" height="18" viewBox="0 0 100 100" fill="none"><path d="M55 18C35 10 10 25 12 52c2 20 18 30 38 26s35-20 30-40C76 22 62 14 55 18Z" fill="#1e1e1e" stroke="#569cd6" stroke-width="4"/><ellipse cx="62" cy="36" rx="5" ry="6" fill="#569cd6"/><ellipse cx="63" cy="37" rx="2" ry="3" fill="#1e1e1e"/><path d="M18 58L8 52M18 58l-8 4" stroke="#f44747" stroke-width="2.5" stroke-linecap="round"/></svg>
+    Snake IDE
+  </div>
+  <button id="run-btn" onclick="Engine.execute()">&#9654; Run (Ctrl+Enter)</button>
+  <button id="clear-btn" onclick="clearTerm()">Clear</button>
+  <button id="clear-btn" onclick="toggleFind()" style="background:none;color:#858585;border:1px solid #555;padding:4px 10px;cursor:pointer;border-radius:3px;font-size:12px;">Find (Ctrl+F)</button>
+  <div id="hdr-right">Snake Lang v2.0 &nbsp;|&nbsp; Ctrl+Enter = Run &nbsp;|&nbsp; Tab = Indent</div>
+</div>
+<div id="body">
+  <div id="sidebar">
+    <div id="sb-title">Explorer</div>
+    <div id="sb-actions">
+      <button onclick="newFile()">+ New</button>
+      <button onclick="deleteFile()">Delete</button>
+    </div>
+    <div id="file-list"></div>
+  </div>
+  <div id="editor-area">
+    <div id="tabs"></div>
+    <div id="find-bar">
+      <input type="text" id="find-input" placeholder="Find..." oninput="findInCode(this.value)" onkeydown="findKey(event)" autocomplete="off">
+      <span id="find-count"></span>
+      <button class="fb-btn" onclick="findNext()">&#8593;</button>
+      <button class="fb-btn" onclick="findPrev()">&#8595;</button>
+      <button class="fb-btn" onclick="toggleFind(false)">&#x2715;</button>
+    </div>
+    <div id="editor-wrap">
+      <div id="lnums">1</div>
+      <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+    </div>
+    <div id="statusbar">
+      <span id="sb-pos">Ln 1, Col 1</span>
+      <span id="sb-sel"></span>
+      <span style="margin-left:auto;">Snake Lang</span>
+      <span>UTF-8</span>
+    </div>
+  </div>
+</div>
+<div id="terminal">
+  <div id="term-hdr">
+    <span class="ptab active">TERMINAL</span>
+    <span class="ptab">OUTPUT</span>
+    <span style="margin-left:auto;cursor:pointer;color:#555;font-size:14px;" onclick="clearTerm()">&#x2715;</span>
+  </div>
+  <div id="term-out"><div class="tl info">Snake IDE Terminal &#8212; Ctrl+Enter to run &#8226; type 'help' for commands</div></div>
+  <div id="term-in-row">
+    <span id="term-prompt">snake:~$</span>
+    <input type="text" id="term-in" spellcheck="false" autocomplete="off" placeholder="type a command...">
+  </div>
+</div>
+<script>
+// VFS - Virtual File System
+const VFS = {
+  files: [
+    { name: 'main.snk', active: true, modified: false, content: `-- Snake Lang v2.0 Demo
+-- Ctrl+Enter to run
+
+fn greet(name) {
+  say "Xin chao, {name}!"
+}
+
+fn factorial(n) {
+  when (n <= 1) { give 1 }
+  give n * factorial(n - 1)
+}
+
+fn fib(n) {
+  when (n <= 1) { give n }
+  give fib(n-1) + fib(n-2)
+}
+
+greet("Snake IDE")
+
+-- Tinh tong 1..100
+let total = 0
+let i = 1
+loop (i <= 100) { total :+ i  i :+ 1 }
+say "Sum 1..100 = {total}"
+
+-- Mang (Array)
+let nums = [3, 1, 4, 1, 5, 9, 2, 6]
+say "Array: {nums}"
+say "Size: {size(nums)}"
+
+-- each..in loop
+each n in nums {
+  when (n > 4) { say "  > 4: {n}" }
+}
+
+-- De quy
+say "10! = {factorial(10)}"
+say "fib(10) = {fib(10)}"
+
+-- String
+say upper("hello snake lang")
+say "PI = {PI}"
+say "sqrt(2) = {sqrt(2)}"
+
+-- Dieu kien long nhau
+let score = 85
+when (score >= 90) {
+  say "Xuat sac"
+} otherwise when (score >= 70) {
+  say "Kha"
+} otherwise {
+  say "Trung binh"
+}` },
+    { name: 'examples.snk', active: false, modified: false, content: `-- Snake Lang Examples
+
+-- 1. Functions
+fn add(a, b) { give a + b }
+fn square(x) { give x ^ 2 }
+say "add(3,4) = {add(3,4)}"
+say "square(7) = {square(7)}"
+
+-- 2. String ops
+let s = "Hello World"
+say upper(s)
+say lower(s)
+say size(s)
+say trim("  spaces  ")
+
+-- 3. Arrays
+let arr = [10, 20, 30, 40, 50]
+push(arr, 60)
+say arr
+say pop(arr)
+say has(arr, 30)
+
+-- 4. Math
+say "max(3,7,2) = {max(3,7,2)}"
+say "min(3,7,2) = {min(3,7,2)}"
+say "abs(-42) = {abs(-42)}"
+say "floor(3.7) = {floor(3.7)}"
+say "ceil(3.2) = {ceil(3.2)}"` }
+  ],
+  openTabs: ['main.snk'],
+  render() {
+    const fl = document.getElementById('file-list');
+    fl.innerHTML = this.files.map(f =>
+      `<div class="fi ${f.active?'active':''} ${f.modified?'modified':''}" onclick="VFS.open('${f.name}')">
+        <span style="color:#e2c08d;font-size:11px;">&#x1F4C4;</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${f.name}</span>
+        <span class="fi-dot"></span>
+      </div>`
+    ).join('');
+    const tb = document.getElementById('tabs');
+    tb.innerHTML = this.openTabs.filter(n => this.files.find(f=>f.name===n)).map(n => {
+      const f = this.files.find(x=>x.name===n);
+      return `<div class="tab ${f.active?'active':''} ${f.modified?'modified':''}" onclick="VFS.open('${n}')">
+        <span style="color:#e2c08d;font-size:11px;">&#x1F4C4;</span>${n}
+        <span class="tab-x" onclick="event.stopPropagation();VFS.closeTab('${n}')">&#x2715;</span>
+      </div>`;
+    }).join('');
+  },
+  open(name) {
+    const cur = this.files.find(f=>f.active);
+    if (cur) cur.content = editor.value;
+    this.files.forEach(f => f.active = (f.name===name));
+    if (!this.openTabs.includes(name)) this.openTabs.push(name);
+    this.render();
+    const f = this.files.find(f=>f.name===name);
+    editor.value = f.content;
+    updateLineNums(); updateStatus();
+  },
+  save() {
+    const f = this.files.find(f=>f.active);
+    if (f) { f.content = editor.value; f.modified = false; this.render(); }
+  },
+  saveAll() {
+    const cur = this.files.find(f=>f.active);
+    if (cur) cur.content = editor.value;
+    this.files.forEach(f => f.modified = false);
+    this.render(); tlog('All files saved.', 'ok');
+  },
+  newFile() {
+    const n = prompt('File name:'); if (!n) return;
+    const name = n.includes('.') ? n : n + '.snk';
+    if (this.files.find(f=>f.name===name)) { tlog('File already exists: '+name,'warn'); return; }
+    const cur = this.files.find(f=>f.active);
+    if (cur) cur.content = editor.value;
+    this.files.forEach(f => f.active = false);
+    this.files.push({name, active:true, modified:false, content:'-- '+name+'\n'});
+    this.openTabs.push(name);
+    this.render(); editor.value = '-- '+name+'\n'; updateLineNums();
+  },
+  deleteFile() {
+    if (this.files.length===1) { tlog('Cannot delete last file','warn'); return; }
+    const f = this.files.find(f=>f.active);
+    if (!f || !confirm('Delete '+f.name+'?')) return;
+    this.files = this.files.filter(x=>x.name!==f.name);
+    this.openTabs = this.openTabs.filter(n=>n!==f.name);
+    const next = this.files[0]; next.active = true;
+    if (!this.openTabs.includes(next.name)) this.openTabs.push(next.name);
+    this.render(); editor.value = next.content; updateLineNums();
+  },
+  closeTab(name) {
+    this.openTabs = this.openTabs.filter(n=>n!==name);
+    const f = this.files.find(x=>x.name===name);
+    if (f && f.active) {
+      if (this.openTabs.length > 0) this.open(this.openTabs[this.openTabs.length-1]);
+      else { const o = this.files.find(x=>x.name!==name); if(o){this.openTabs.push(o.name);this.open(o.name);} }
+    } else this.render();
+  },
+  renameFile(o, n) {
+    const f = this.files.find(x=>x.name===o); if(!f){tlog('Not found','err');return;}
+    const nn = n.includes('.')?n:n+'.snk'; f.name = nn;
+    this.openTabs = this.openTabs.map(x=>x===o?nn:x);
+    this.render(); tlog('Renamed to '+nn,'ok');
+  }
+};
+
+function newFile() { VFS.newFile(); }
+function deleteFile() { VFS.deleteFile(); }
+
+// TERMINAL
+function tlog(msg, cls) {
+  const d = document.createElement('div');
+  d.className = 'tl' + (cls?' '+cls:'');
+  d.textContent = msg;
+  const out = document.getElementById('term-out');
+  out.appendChild(d); out.scrollTop = out.scrollHeight;
+}
+function clearTerm() { document.getElementById('term-out').innerHTML = ''; }
+
+const termIn = document.getElementById('term-in');
+const hist = []; let histIdx = -1;
+termIn.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const cmd = termIn.value.trim(); if (!cmd) return;
+    hist.unshift(cmd); histIdx = -1;
+    tlog('snake:~$ ' + cmd, 'cmd');
+    const p = cmd.split(/\s+/);
+    switch(p[0].toLowerCase()) {
+      case 'run': Engine.execute(); break;
+      case 'clear': case 'cls': clearTerm(); break;
+      case 'save': VFS.save(); tlog('Saved.','ok'); break;
+      case 'ls': VFS.files.forEach(f=>tlog('  '+(f.active?'> ':' ')+f.name+(f.modified?' [M]':''))); break;
+      case 'new': VFS.newFile(); break;
+      case 'rm': if(p[1]){const f=VFS.files.find(x=>x.name===p[1]);if(f){VFS.files=VFS.files.filter(x=>x.name!==p[1]);VFS.openTabs=VFS.openTabs.filter(n=>n!==p[1]);if(f.active&&VFS.files.length){VFS.files[0].active=true;VFS.open(VFS.files[0].name);}else VFS.render();tlog('Deleted: '+p[1],'ok');}else tlog('Not found: '+p[1],'err');}break;
+      case 'rename': if(p[1]&&p[2])VFS.renameFile(p[1],p[2]);else tlog('Usage: rename <old> <new>','warn');break;
+      case 'cat': if(p[1]){const f=VFS.files.find(x=>x.name===p[1]);if(f)tlog(f.content);else tlog('Not found: '+p[1],'err');}break;
+      case 'date': tlog(new Date().toLocaleString()); break;
+      case 'echo': tlog(p.slice(1).join(' ')); break;
+      case 'version': tlog('Snake IDE v2.0 — Snake Lang custom scripting'); break;
+      case 'help': ['run','clear','save','ls','new','rm <f>','rename <o> <n>','cat <f>','date','echo <t>','version'].forEach(c=>tlog('  '+c)); break;
+      default: tlog("Unknown: '"+p[0]+"' — type 'help'", 'err');
+    }
+    termIn.value = '';
+  }
+  if (e.key==='ArrowUp'){if(histIdx<hist.length-1)histIdx++;termIn.value=hist[histIdx]||'';}
+  if (e.key==='ArrowDown'){if(histIdx>0)histIdx--;else{histIdx=-1;termIn.value='';return;}termIn.value=hist[histIdx]||'';}
+  if (e.ctrlKey&&e.key==='l'){e.preventDefault();clearTerm();}
+});
+
+// EDITOR
+const editor = document.getElementById('editor');
+const lnums = document.getElementById('lnums');
+
+function updateLineNums() {
+  const n = editor.value.split('\n').length;
+  lnums.textContent = Array.from({length:n},(_,i)=>i+1).join('\n');
+}
+function updateStatus() {
+  const val = editor.value.substring(0, editor.selectionStart);
+  const ln = val.split('\n').length;
+  const col = val.split('\n').pop().length + 1;
+  document.getElementById('sb-pos').textContent = 'Ln '+ln+', Col '+col;
+  const sel = Math.abs(editor.selectionEnd - editor.selectionStart);
+  const selEl = document.getElementById('sb-sel');
+  selEl.textContent = sel ? '('+sel+' selected)' : '';
+}
+editor.addEventListener('input', () => { updateLineNums(); const f=VFS.files.find(f=>f.active); if(f){f.content=editor.value;f.modified=true;VFS.render();} });
+editor.addEventListener('click', updateStatus);
+editor.addEventListener('keyup', updateStatus);
+editor.addEventListener('scroll', () => { lnums.scrollTop = editor.scrollTop; });
+
+editor.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key==='Enter') { e.preventDefault(); Engine.execute(); return; }
+  if (e.ctrlKey && e.key==='s') { e.preventDefault(); VFS.save(); tlog('Saved ✓','ok'); return; }
+  if (e.ctrlKey && e.shiftKey && e.key==='S') { e.preventDefault(); VFS.saveAll(); return; }
+  if (e.ctrlKey && e.key==='f') { e.preventDefault(); toggleFind(); return; }
+  if (e.ctrlKey && e.key==='n') { e.preventDefault(); VFS.newFile(); return; }
+  if (e.ctrlKey && e.key==='/') { e.preventDefault(); commentLine(); return; }
+  if (e.ctrlKey && e.key==='d') { e.preventDefault(); duplicateLine(); return; }
+  if (e.key==='Escape') { toggleFind(false); return; }
+  if (e.key==='Tab') {
+    e.preventDefault();
+    const s=editor.selectionStart, en=editor.selectionEnd, val=editor.value;
+    if (s!==en) {
+      const before=val.substring(0,s), sel=val.substring(s,en), after=val.substring(en);
+      if (e.shiftKey) { const u=sel.replace(/^    /gm,''); editor.value=before+u+after; editor.selectionStart=s; editor.selectionEnd=s+u.length; }
+      else { const ind=sel.replace(/^/gm,'    '); editor.value=before+ind+after; editor.selectionStart=s; editor.selectionEnd=s+ind.length; }
+    } else {
+      editor.value=val.substring(0,s)+'    '+val.substring(en);
+      editor.selectionStart=editor.selectionEnd=s+4;
+    }
+    updateLineNums(); return;
+  }
+  if (e.key==='Enter') {
+    const s=editor.selectionStart, val=editor.value;
+    const lineStart=val.lastIndexOf('\n',s-1)+1;
+    const line=val.substring(lineStart,s);
+    const indent=line.match(/^(\s*)/)[1];
+    const extra=line.trimEnd().endsWith('{')?'    ':'';
+    e.preventDefault();
+    const ins='\n'+indent+extra;
+    editor.value=val.substring(0,s)+ins+val.substring(editor.selectionEnd);
+    editor.selectionStart=editor.selectionEnd=s+ins.length;
+    updateLineNums(); return;
+  }
+});
+
+function commentLine() {
+  const s=editor.selectionStart, en=editor.selectionEnd, val=editor.value;
+  const ls=val.lastIndexOf('\n',s-1)+1;
+  const le=val.indexOf('\n',en); const end=le===-1?val.length:le;
+  const line=val.substring(ls,end);
+  const nl=line.trimStart().startsWith('--')?line.replace(/^(\s*)--\s?/,'$1'):line.replace(/^(\s*)/,'$1-- ');
+  editor.value=val.substring(0,ls)+nl+val.substring(end);
+  const d=nl.length-line.length; editor.selectionStart=s+d; editor.selectionEnd=en+d;
+  updateLineNums();
+}
+function duplicateLine() {
+  const s=editor.selectionStart, val=editor.value;
+  const ls=val.lastIndexOf('\n',s-1)+1;
+  const le=val.indexOf('\n',s); const end=le===-1?val.length:le;
+  const line=val.substring(ls,end);
+  editor.value=val.substring(0,end)+'\n'+line+val.substring(end);
+  editor.selectionStart=editor.selectionEnd=s+line.length+1;
+  updateLineNums();
+}
+
+// FIND
+let findMatches=[], findIdx=0;
+function toggleFind(show) {
+  const fb=document.getElementById('find-bar');
+  if (show===false) { fb.classList.remove('show'); return; }
+  fb.classList.toggle('show');
+  if (fb.classList.contains('show')) { document.getElementById('find-input').focus(); document.getElementById('find-input').select(); }
+}
+function findInCode(q) {
+  findMatches=[]; findIdx=0;
+  if (!q) { document.getElementById('find-count').textContent=''; return; }
+  const text=editor.value, low=text.toLowerCase(), ql=q.toLowerCase();
+  let i=0; while((i=low.indexOf(ql,i))!==-1){findMatches.push(i);i+=ql.length;}
+  document.getElementById('find-count').textContent=findMatches.length?(findIdx+1)+'/'+findMatches.length:'No results';
+  if (findMatches.length) selMatch(0);
+}
+function selMatch(i) {
+  const q=document.getElementById('find-input').value;
+  editor.focus(); editor.setSelectionRange(findMatches[i],findMatches[i]+q.length);
+  document.getElementById('find-count').textContent=(i+1)+'/'+findMatches.length;
+}
+function findNext(){if(!findMatches.length)return;findIdx=(findIdx+1)%findMatches.length;selMatch(findIdx);}
+function findPrev(){if(!findMatches.length)return;findIdx=(findIdx-1+findMatches.length)%findMatches.length;selMatch(findIdx);}
+function findKey(e){if(e.key==='Enter'){e.shiftKey?findPrev():findNext();}if(e.key==='Escape')toggleFind(false);}
+
+// BOOT
+VFS.render();
+editor.value = VFS.files[0].content;
+updateLineNums();
+</script>
+<script>
+class Env{constructor(p){this.v=new Map();this.p=p;}get(n){if(this.v.has(n))return this.v.get(n);if(this.p)return this.p.get(n);throw new Error("Undefined: '"+n+"'");}set(n,v){this.v.set(n,v);}assign(n,v){if(this.v.has(n)){this.v.set(n,v);return;}if(this.p){this.p.assign(n,v);return;}throw new Error("Undeclared '"+n+"'");}}
+const Engine={
+  MAX_ITER:50000,
+  execute(){
+    const src=editor.value;
+    tlog('Running...','info');const t0=performance.now();
+    try{const env=new Env(null);this.builtins(env);this.execBlock(this.parse(this.tokenize(src)),env);tlog('Done in '+(performance.now()-t0).toFixed(1)+'ms','ok');}
+    catch(e){tlog(e.message,'err');}
+  },
+  builtins(env){
+    ['say','ask','size','num','text','floor','ceil','abs','rand','sqrt','max','min','type','upper','lower','trim','split','join','push','pop','has'].forEach(n=>env.set(n,{__b__:n}));
+    env.set('PI',Math.PI);env.set('E',Math.E);env.set('INF',Infinity);
+  },
+  tokenize(src){
+    const t=[],push=(a,b)=>t.push({t:a,v:b});let i=0;
+    while(i<src.length){
+      if(/\s/.test(src[i])){i++;continue;}
+      if(src[i]==='-'&&src[i+1]==='-'){while(i<src.length&&src[i]!=='\n')i++;continue;}
+      if(src[i]==='#'&&src[i+1]==='['){i+=2;while(i<src.length&&!(src[i]===']'&&src[i+1]==='#'))i++;i+=2;continue;}
+      if(src[i]==='"'){let s='';i++;while(i<src.length&&src[i]!=='"'){if(src[i]==='\\'){i++;s+=({n:'\n',t:'\t','"':'"','\\':'\\'}[src[i]]||src[i]);i++;}else s+=src[i++];}i++;push('STR',s);continue;}
+      if(/\d/.test(src[i])){let n='';while(i<src.length&&/[\d.]/.test(src[i]))n+=src[i++];push('NUM',parseFloat(n));continue;}
+      const t2=src.slice(i,i+2);if([':+',':-',':*',':/','==','!=','<=','>=','~>'].includes(t2)){push('OP',t2);i+=2;continue;}
+      const c=src[i];
+      if(c==='~'){push('OP','~');i++;continue;}if('+-*/%^'.includes(c)){push('OP',c);i++;continue;}
+      if(c==='='){push('=','=');i++;continue;}if('<>!&|'.includes(c)){push('OP',c);i++;continue;}
+      if('(){}[];,'.includes(c)){push(c,null);i++;continue;}
+      if(/[a-zA-Z_]/.test(c)){let id='';while(i<src.length&&/\w/.test(src[i]))id+=src[i++];const KW=['let','fn','give','when','otherwise','loop','repeat','stop','skip','yes','no','void','and','or','not','each','in'];push(KW.includes(id)?'KW':'ID',id);continue;}
+      i++;
+    }
+    return t;
+  },
+  parse(toks){
+    let p=0;
+    const pk=()=>toks[p];const chk=(t,v)=>{const k=pk();return k&&k.t===t&&(v===undefined||k.v===v);};
+    const eat=(t,v)=>{const k=toks[p];if(!k)throw new Error('Unexpected end');if(k.t!==t)throw new Error('Expected '+t+' got '+k.v);if(v!==undefined&&k.v!==v)throw new Error('Expected '+v);p++;return k;};
+    const opt=(t,v)=>{if(chk(t,v)){p++;return true;}return false;};
+    const block=()=>{eat('{');const s=[];while(!chk('}')){if(!pk())throw new Error('Unclosed {');s.push(stmt());}eat('}');return s;};
+    const stmt=()=>{
+      if(!pk())throw new Error('Unexpected end');
+      if(chk('KW','fn')){eat('KW','fn');const n=eat('ID').v;eat('(');const ps=[];while(!chk(')')){ps.push(eat('ID').v);opt(',');}eat(')');return{t:'Fn',n,ps,b:block()};}
+      if(chk('KW','let')){eat('KW','let');const n=eat('ID').v;let v=null;if(opt('='))v=expr();opt(';');return{t:'Let',n,v};}
+      if(chk('KW','when')){eat('KW','when');eat('(');const c=expr();eat(')');const th=block();let el=null;if(chk('KW','otherwise')){eat('KW','otherwise');el=chk('KW','when')?[stmt()]:block();}return{t:'When',c,th,el};}
+      if(chk('KW','loop')){eat('KW','loop');eat('(');const c=expr();eat(')');return{t:'Loop',c,b:block()};}
+      if(chk('KW','repeat')){eat('KW','repeat');const c=expr();return{t:'Rep',c,b:block()};}
+      if(chk('KW','each')){eat('KW','each');const n=eat('ID').v;eat('KW','in');const arr=expr();return{t:'Each',n,arr,b:block()};}
+      if(chk('KW','give')){eat('KW','give');const v=(chk(';')||chk('}'))?null:expr();opt(';');return{t:'Give',v};}
+      if(chk('KW','stop')){eat('KW');opt(';');return{t:'Stop'};}
+      if(chk('KW','skip')){eat('KW');opt(';');return{t:'Skip'};}
+      if(chk('KW','say')||chk('ID','say')){eat(pk().t,'say');const args=[];if(chk('(')){eat('(');while(!chk(')')){args.push(expr());opt(',');}eat(')');}else args.push(expr());opt(';');return{t:'Expr',e:{t:'Call',n:'say',args}};}
+      if(chk('ID')){
+        const n=eat('ID').v;
+        if(chk('OP',':+')||chk('OP',':-')||chk('OP',':*')||chk('OP',':/')){const op=eat('OP').v[1];const v=expr();opt(';');return{t:'Asgn',n,v:{t:'Bin',op,l:{t:'Var',n},r:v}};}
+        if(opt('=')){const v=expr();opt(';');return{t:'Asgn',n,v};}
+        if(chk('(')){eat('(');const args=[];while(!chk(')')){args.push(expr());opt(',');}eat(')');opt(';');return{t:'Expr',e:{t:'Call',n,args}};}
+        p--;
+      }
+      const e=expr();opt(';');return{t:'Expr',e};
+    };
+    const expr=()=>or();
+    const or=()=>{let l=and();while(chk('KW','or')||chk('OP','|')){p++;l={t:'Bin',op:'||',l,r:and()};}return l;};
+    const and=()=>{let l=cmp();while(chk('KW','and')||chk('OP','&')){p++;l={t:'Bin',op:'&&',l,r:cmp()};}return l;};
+    const cmp=()=>{let l=add();while(pk()&&pk().t==='OP'&&['==','!=','<','>','<=','>='].includes(pk().v)){const op=eat('OP').v;l={t:'Bin',op,l,r:add()};}return l;};
+    const add=()=>{let l=mul();while(pk()&&pk().t==='OP'&&['+','-','~'].includes(pk().v)){const op=eat('OP').v;l={t:'Bin',op,l,r:mul()};}return l;};
+    const mul=()=>{let l=un();while(pk()&&pk().t==='OP'&&['*','/','%','^'].includes(pk().v)){const op=eat('OP').v;l={t:'Bin',op,l,r:un()};}return l;};
+    const un=()=>{if(chk('KW','not')||chk('OP','!')){p++;return{t:'Un',op:'!',v:un()};}if(chk('OP','-')){p++;return{t:'Un',op:'-',v:un()};}return call();};
+    const call=()=>{if(pk()&&pk().t==='ID'&&toks[p+1]&&toks[p+1].t==='('){const n=eat('ID').v;eat('(');const args=[];while(!chk(')')){args.push(expr());opt(',');}eat(')');return{t:'Call',n,args};}return prim();};
+    const prim=()=>{
+      const k=pk();if(!k)throw new Error('Unexpected end');
+      if(k.t==='NUM'){p++;return{t:'Num',v:k.v};}if(k.t==='STR'){p++;return{t:'Str',v:k.v};}
+      if(chk('KW','yes')){p++;return{t:'Bool',v:true};}if(chk('KW','no')){p++;return{t:'Bool',v:false};}
+      if(chk('KW','void')){p++;return{t:'Void'};}
+      if(k.t==='['){eat('[');const els=[];while(!chk(']')){els.push(expr());opt(',');}eat(']');return{t:'Arr',els};}
+      if(k.t==='ID'){p++;return{t:'Var',n:k.v};}
+      if(k.t==='('){eat('(');const e=expr();eat(')');return e;}
+      throw new Error('Unexpected: '+k.v);
+    };
+    const stmts=[];while(p<toks.length)stmts.push(stmt());return stmts;
+  },
+  execBlock(ss,env){for(const s of ss){const r=this.execStmt(s,env);if(r&&(r.__g__!==undefined||r.__stop__||r.__skip__))return r;}},
+  execStmt(s,env){
+    switch(s.t){
+      case 'Let':env.set(s.n,s.v?this.eval(s.v,env):null);break;
+      case 'Asgn':env.assign(s.n,this.eval(s.v,env));break;
+      case 'Fn':env.set(s.n,{__fn__:true,ps:s.ps,b:s.b,cl:env});break;
+      case 'Expr':this.eval(s.e,env);break;
+      case 'Give':return{__g__:s.v?this.eval(s.v,env):null};
+      case 'Stop':return{__stop__:true};case 'Skip':return{__skip__:true};
+      case 'When':if(this.truthy(this.eval(s.c,env)))return this.execBlock(s.th,new Env(env));else if(s.el)return this.execBlock(s.el,new Env(env));break;
+      case 'Loop':{let n=0;while(this.truthy(this.eval(s.c,env))){if(++n>this.MAX_ITER)throw new Error('Infinite loop');const r=this.execBlock(s.b,new Env(env));if(r&&r.__stop__)break;if(r&&r.__g__!==undefined)return r;}break;}
+      case 'Rep':{const n=Math.floor(this.eval(s.c,env));for(let i=0;i<n;i++){const r=this.execBlock(s.b,new Env(env));if(r&&r.__stop__)break;if(r&&r.__g__!==undefined)return r;}break;}
+      case 'Each':{const arr=this.eval(s.arr,env);if(!Array.isArray(arr))throw new Error("'each' requires array");for(const item of arr){const fe=new Env(env);fe.set(s.n,item);const r=this.execBlock(s.b,fe);if(r&&r.__stop__)break;if(r&&r.__g__!==undefined)return r;}break;}
+    }
+  },
+  eval(node,env){
+    switch(node.t){
+      case 'Num':return node.v;case 'Bool':return node.v;case 'Void':return null;
+      case 'Str':return this.interp(node.v,env);case 'Var':return env.get(node.n);
+      case 'Arr':return node.els.map(e=>this.eval(e,env));
+      case 'Un':if(node.op==='!')return!this.truthy(this.eval(node.v,env));if(node.op==='-')return-this.eval(node.v,env);break;
+      case 'Bin':{const L=this.eval(node.l,env),R=this.eval(node.r,env);
+        switch(node.op){
+          case '+':return(typeof L==='string'||typeof R==='string')?String(L)+String(R):L+R;
+          case '-':return L-R;case '*':return L*R;case '/':if(R===0)throw new Error('Division by zero');return L/R;
+          case '%':return L%R;case '^':return Math.pow(L,R);case '~':return String(L)+String(R);
+          case '==':return L===R;case '!=':return L!==R;case '<':return L<R;case '>':return L>R;case '<=':return L<=R;case '>=':return L>=R;
+          case '&&':return this.truthy(L)&&this.truthy(R);case '||':return this.truthy(L)||this.truthy(R);
+        }break;}
+      case 'Call':{const fn=env.get(node.n);const args=node.args.map(a=>this.eval(a,env));
+        if(fn&&fn.__b__)return this.builtin(fn.__b__,args);
+        if(fn&&fn.__fn__){const fe=new Env(fn.cl);fn.ps.forEach((p,i)=>fe.set(p,args[i]??null));const r=this.execBlock(fn.b,fe);return r?.__g__??null;}
+        throw new Error("'"+node.n+"' is not a function");}
+    }
+    return null;
+  },
+  interp(s,env){return s.replace(/\{([a-zA-Z_]\w*)\}/g,(_,n)=>{try{return this.str(env.get(n));}catch{return'{'+n+'}';}});},
+  builtin(n,a){
+    switch(n){
+      case 'say':tlog(a.map(x=>this.str(x)).join(' '));return null;
+      case 'ask':return prompt(a[0]||'');
+      case 'size':return Array.isArray(a[0])?a[0].length:typeof a[0]==='string'?a[0].length:0;
+      case 'num':return parseFloat(a[0]);case 'text':return this.str(a[0]);
+      case 'floor':return Math.floor(a[0]);case 'ceil':return Math.ceil(a[0]);
+      case 'abs':return Math.abs(a[0]);case 'rand':return Math.random()*(a[0]||1);
+      case 'sqrt':return Math.sqrt(a[0]);case 'max':return Math.max(...a);case 'min':return Math.min(...a);
+      case 'type':return Array.isArray(a[0])?'array':typeof a[0];
+      case 'upper':return String(a[0]).toUpperCase();case 'lower':return String(a[0]).toLowerCase();
+      case 'trim':return String(a[0]).trim();
+      case 'split':return String(a[0]).split(a[1]||'');
+      case 'join':return Array.isArray(a[0])?a[0].join(a[1]||''):String(a[0]);
+      case 'push':if(Array.isArray(a[0])){a[0].push(a[1]);return a[0];}return null;
+      case 'pop':return Array.isArray(a[0])?a[0].pop():null;
+      case 'has':return Array.isArray(a[0])?a[0].includes(a[1]):false;
+    }
+  },
+  truthy(v){return v!==null&&v!==false&&v!==0&&v!=='';},
+  str(v){if(v===null)return'void';if(v===true)return'yes';if(v===false)return'no';if(Array.isArray(v))return'['+v.map(x=>Engine.str(x)).join(', ')+']';if(v&&v.__fn__)return'[fn]';return String(v);}
+};
+</script>
+</body>
+</html>
