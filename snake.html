@@ -1,577 +1,1636 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Snake IDE</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#1e1e1e;color:#d4d4d4;font-family:'Segoe UI',sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+*{box-sizing:border-box;margin:0;padding:0}
+pre,code,textarea,#highlight-layer{
+  font-family:'Consolas','Courier New',monospace!important;
+  font-size:14px!important;
+  line-height:21px!important;
+  tab-size:2!important;
+}
+:root{
+  --bg:#1e1e1e;--bg2:#252526;--bg3:#2d2d30;--bg4:#3c3c3c;
+  --fg:#d4d4d4;--fg2:#858585;--accent:#569cd6;--accent2:#4ec9b0;
+  --green:#6a9955;--yellow:#dcdcaa;--orange:#ce9178;--purple:#c586c0;
+  --red:#f44747;--border:#3c3c3c;--tab:#2d2d30;--tabact:#1e1e1e;
+}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',sans-serif;
+  display:flex;flex-direction:column;height:100vh;overflow:hidden}
+
 /* HEADER */
-#hdr{height:36px;background:#323233;display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0;border-bottom:1px solid #252526;}
-#hdr-logo{display:flex;align-items:center;gap:6px;font-size:13px;color:#ccc;font-weight:500;}
-#run-btn{background:#0078d4;color:#fff;border:none;padding:4px 14px;cursor:pointer;border-radius:3px;font-size:12px;font-family:inherit;display:flex;align-items:center;gap:5px;}
-#run-btn:hover{background:#106ebe;}
-#clear-btn{background:none;color:#858585;border:1px solid #555;padding:4px 10px;cursor:pointer;border-radius:3px;font-size:12px;font-family:inherit;}
-#clear-btn:hover{color:#ccc;border-color:#888;}
-#hdr-right{margin-left:auto;font-size:11px;color:#555;}
-/* BODY */
-#body{display:flex;flex:1;overflow:hidden;}
+#header{display:flex;align-items:center;gap:12px;padding:0 16px;
+  height:40px;background:#323233;border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:10}
+#logo{font-size:18px;font-weight:700;color:var(--accent2);letter-spacing:1px}
+#logo span{color:var(--accent)}
+#btn-run{background:var(--accent2);color:#000;border:none;padding:4px 14px;
+  border-radius:4px;cursor:pointer;font-weight:600;font-size:13px}
+#btn-run:hover{background:#3daa8f}
+.hdr-spacer{flex:1}
+#status-bar{font-size:11px;color:var(--fg2)}
+
+/* MAIN LAYOUT */
+#main{display:flex;flex:1;overflow:hidden}
+
 /* SIDEBAR */
-#sidebar{width:200px;background:#252526;border-right:1px solid #333;display:flex;flex-direction:column;flex-shrink:0;}
-#sb-title{padding:8px 12px;font-size:10px;color:#bbb;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #333;font-weight:600;}
-#sb-actions{display:flex;gap:4px;padding:6px 8px;border-bottom:1px solid #333;}
-#sb-actions button{background:none;border:1px solid #444;color:#888;padding:3px 8px;cursor:pointer;border-radius:3px;font-size:11px;font-family:inherit;}
-#sb-actions button:hover{color:#ccc;border-color:#888;}
-#file-list{padding:4px 0;flex:1;overflow-y:auto;}
-.fi{padding:4px 8px 4px 16px;font-size:12px;cursor:pointer;color:#ccc;display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.fi:hover{background:#2a2d2e;}
-.fi.active{background:#37373d;color:#fff;}
-.fi-dot{width:6px;height:6px;border-radius:50%;background:#e2c08d;display:none;}
-.fi.modified .fi-dot{display:block;}
+#sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
+#sidebar-header{padding:8px 12px;font-size:11px;font-weight:600;
+  color:var(--fg2);text-transform:uppercase;letter-spacing:1px;
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+#sidebar-header button{background:none;border:none;color:var(--fg2);
+  cursor:pointer;font-size:14px;padding:0 2px}
+#sidebar-header button:hover{color:var(--fg)}
+#file-list{flex:1;overflow-y:auto;padding:4px 0}
+.file-item{display:flex;align-items:center;padding:3px 12px;cursor:pointer;
+  font-size:13px;gap:6px;user-select:none}
+.file-item:hover{background:var(--bg3)}
+.file-item.active{background:var(--bg4);color:#fff}
+.file-item .fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-item .fi-del{opacity:0;font-size:11px;color:var(--fg2);background:none;
+  border:none;cursor:pointer;padding:0 2px}
+.file-item:hover .fi-del{opacity:1}
+.file-item .fi-del:hover{color:var(--red)}
+
+/* OUTLINE */
+#outline-header{padding:6px 12px;font-size:11px;font-weight:600;
+  color:var(--fg2);text-transform:uppercase;letter-spacing:1px;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+#outline-list{max-height:160px;overflow-y:auto;padding:4px 0}
+.outline-item{padding:2px 16px;font-size:12px;cursor:pointer;color:var(--yellow)}
+.outline-item:hover{background:var(--bg3)}
+.outline-item.ol-let{color:var(--accent)}
+
 /* EDITOR AREA */
-#editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
-/* TABS */
-#tabs{height:35px;background:#2d2d30;display:flex;align-items:flex-end;border-bottom:1px solid #333;flex-shrink:0;}
-.tab{padding:0 14px;height:35px;display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;color:#858585;border-right:1px solid #333;background:#2d2d30;white-space:nowrap;}
-.tab.active{background:#1e1e1e;color:#fff;border-top:1px solid #0078d4;}
-.tab-x{font-size:14px;color:#555;margin-left:4px;}
-.tab:hover .tab-x{color:#ccc;}
-/* EDITOR */
-#editor-wrap{flex:1;display:flex;overflow:hidden;position:relative;}
-#lnums{background:#1e1e1e;color:#555;padding:12px 10px 12px 8px;font-size:13px;line-height:1.5;text-align:right;user-select:none;overflow:hidden;flex-shrink:0;font-family:'Consolas','Courier New',monospace;border-right:1px solid #2a2a2a;min-width:44px;}
-#editor{flex:1;background:#1e1e1e;color:#d4d4d4;border:none;outline:none;padding:12px 12px 12px 14px;font-family:'Consolas','Courier New',monospace;font-size:13px;line-height:1.5;resize:none;tab-size:4;white-space:pre;overflow:auto;}
-/* STATUSBAR */
-#statusbar{height:22px;background:#007acc;color:#fff;padding:0 12px;font-size:11px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
-/* TERMINAL */
-#terminal{height:200px;background:#0c0c0c;border-top:2px solid #007acc;display:flex;flex-direction:column;flex-shrink:0;}
-#term-hdr{background:#1e1e1e;padding:0 12px;height:35px;font-size:11px;color:#858585;border-bottom:1px solid #333;display:flex;align-items:center;gap:12px;flex-shrink:0;}
-.ptab{height:35px;display:flex;align-items:center;font-size:11px;color:#858585;cursor:pointer;border-bottom:2px solid transparent;padding:0 4px;}
-.ptab.active{color:#fff;border-bottom-color:#007acc;}
-#term-out{flex:1;overflow-y:auto;padding:4px 12px;font-size:12px;font-family:'Consolas','Courier New',monospace;}
-.tl{line-height:1.5;padding:1px 0;word-break:break-all;}
-.ok{color:#4ec9b0;}.err{color:#f44747;}.info{color:#75beff;}.warn{color:#dcdcaa;}.cmd{color:#569cd6;font-size:11px;}
-#term-in-row{display:flex;align-items:center;padding:3px 12px 5px;background:#111;gap:6px;border-top:1px solid #222;flex-shrink:0;}
-#term-prompt{color:#569cd6;font-size:12px;font-family:'Consolas',monospace;white-space:nowrap;}
-#term-in{background:transparent;border:none;outline:none;color:#ccc;flex:1;font-size:12px;font-family:'Consolas','Courier New',monospace;}
+#editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#tabs{display:flex;background:var(--bg3);border-bottom:1px solid var(--border);
+  flex-shrink:0;overflow-x:auto}
+.tab{padding:6px 16px;font-size:13px;cursor:pointer;border-right:1px solid var(--border);
+  white-space:nowrap;color:var(--fg2);display:flex;align-items:center;gap:6px}
+.tab.active{background:var(--tabact);color:var(--fg);border-top:2px solid var(--accent)}
+.tab:hover:not(.active){background:var(--bg4)}
+.tab .tab-close{opacity:0;font-size:11px;background:none;border:none;
+  color:var(--fg2);cursor:pointer;padding:0 2px}
+.tab:hover .tab-close,.tab.active .tab-close{opacity:1}
+.tab .tab-close:hover{color:var(--red)}
+
+/* EDITOR WRAPPER */
+#editor-wrap{flex:1;display:flex;overflow:hidden;position:relative}
+#line-numbers{width:48px;background:var(--bg2);color:var(--fg2);
+  font-family:'Consolas','Courier New',monospace;font-size:14px;
+  line-height:21px;padding:8px 0;text-align:right;padding-right:8px;
+  overflow:hidden;flex-shrink:0;user-select:none;border-right:1px solid var(--border)}
+#code-container{flex:1;position:relative;overflow:hidden;}
+#highlight-layer{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  font-family:'Consolas','Courier New',monospace;font-size:14px;
+  line-height:21px;padding:8px;white-space:pre;overflow:hidden;
+  pointer-events:none;z-index:1;}
+#editor{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:transparent;color:transparent;caret-color:#aeafad;
+  font-family:'Consolas','Courier New',monospace;font-size:14px;
+  line-height:21px;padding:8px;border:none;outline:none;resize:none;
+  overflow:auto;white-space:pre;tab-size:2;z-index:2;
+  -webkit-text-fill-color:transparent;}
+
 /* FIND BAR */
-#find-bar{display:none;background:#252526;border-bottom:1px solid #333;padding:5px 10px;gap:6px;align-items:center;flex-shrink:0;}
-#find-bar.show{display:flex;}
-#find-bar input{background:#3c3c3c;border:1px solid #555;color:#d4d4d4;padding:3px 8px;font-size:12px;border-radius:2px;outline:none;font-family:'Consolas',monospace;width:200px;}
-#find-bar input:focus{border-color:#007acc;}
-.fb-btn{background:none;border:1px solid #555;color:#858585;padding:2px 8px;font-size:11px;border-radius:2px;cursor:pointer;}
-.fb-btn:hover{color:#ccc;border-color:#888;}
-#find-count{font-size:11px;color:#858585;min-width:60px;}
-/* SCROLLBAR */
-::-webkit-scrollbar{width:8px;height:8px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:#424242;}
-::-webkit-scrollbar-thumb:hover{background:#555;}
+#find-bar{display:none;background:var(--bg3);border-bottom:1px solid var(--border);
+  padding:6px 10px;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0}
+#find-bar.visible{display:flex}
+#find-bar input{background:var(--bg4);border:1px solid var(--border);color:var(--fg);
+  padding:3px 8px;border-radius:3px;font-size:13px;width:180px}
+#find-bar input:focus{outline:none;border-color:var(--accent)}
+#find-bar button{background:var(--bg4);border:1px solid var(--border);color:var(--fg);
+  padding:3px 8px;border-radius:3px;cursor:pointer;font-size:12px}
+#find-bar button:hover{background:var(--bg3);border-color:var(--accent)}
+#find-bar button.active{background:var(--accent);color:#000;border-color:var(--accent)}
+#find-count{font-size:12px;color:var(--fg2)}
+
+/* AUTOCOMPLETE */
+#autocomplete{position:absolute;background:var(--bg3);border:1px solid var(--accent);
+  border-radius:4px;z-index:100;max-height:200px;overflow-y:auto;
+  font-family:'Consolas','Courier New',monospace;font-size:13px;min-width:160px;
+  box-shadow:0 4px 16px #0008;display:none}
+.ac-item{padding:4px 12px;cursor:pointer;color:var(--fg)}
+.ac-item:hover,.ac-item.selected{background:var(--accent);color:#000}
+.ac-item .ac-type{font-size:10px;color:var(--fg2);margin-left:6px}
+.ac-item.selected .ac-type{color:#0008}
+
+/* TERMINAL */
+#terminal-wrap{height:200px;display:flex;flex-direction:column;
+  border-top:1px solid var(--border);flex-shrink:0}
+#terminal-header{padding:4px 12px;background:var(--bg3);font-size:11px;
+  font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:1px;
+  display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+#terminal-header button{background:none;border:none;color:var(--fg2);
+  cursor:pointer;font-size:12px;padding:0 4px}
+#terminal-header button:hover{color:var(--fg)}
+#terminal{flex:1;background:#0d0d0d;font-family:'Consolas','Courier New',monospace;
+  font-size:13px;padding:8px;overflow-y:auto;color:var(--fg)}
+#terminal-input-row{display:flex;background:#0d0d0d;border-top:1px solid var(--border);
+  padding:4px 8px;align-items:center}
+#terminal-prompt{color:var(--accent2);font-family:'Consolas','Courier New',monospace;
+  font-size:13px;margin-right:6px}
+#terminal-input{flex:1;background:transparent;border:none;outline:none;
+  color:var(--fg);font-family:'Consolas','Courier New',monospace;font-size:13px}
+
+/* SCROLLBARS */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:#555}
+
+/* HIGHLIGHT COLORS */
+.hl-kw{color:var(--purple)}
+.hl-fn{color:var(--yellow)}
+.hl-bi{color:var(--accent2)}
+.hl-str{color:var(--orange)}
+.hl-num{color:#b5cea8}
+.hl-cmt{color:var(--green);font-style:italic}
+.hl-const{color:#9cdcfe}
+.hl-op{color:var(--accent)}
 </style>
 </head>
 <body>
-<div id="hdr">
-  <div id="hdr-logo">
-    <svg width="18" height="18" viewBox="0 0 100 100" fill="none"><path d="M55 18C35 10 10 25 12 52c2 20 18 30 38 26s35-20 30-40C76 22 62 14 55 18Z" fill="#1e1e1e" stroke="#569cd6" stroke-width="4"/><ellipse cx="62" cy="36" rx="5" ry="6" fill="#569cd6"/><ellipse cx="63" cy="37" rx="2" ry="3" fill="#1e1e1e"/><path d="M18 58L8 52M18 58l-8 4" stroke="#f44747" stroke-width="2.5" stroke-linecap="round"/></svg>
-    Snake IDE
-  </div>
-  <button id="run-btn" onclick="Engine.execute()">&#9654; Run (Ctrl+Enter)</button>
-  <button id="clear-btn" onclick="clearTerm()">Clear</button>
-  <button id="clear-btn" onclick="toggleFind()" style="background:none;color:#858585;border:1px solid #555;padding:4px 10px;cursor:pointer;border-radius:3px;font-size:12px;">Find (Ctrl+F)</button>
-  <div id="hdr-right">Snake Lang v2.0 &nbsp;|&nbsp; Ctrl+Enter = Run &nbsp;|&nbsp; Tab = Indent</div>
+<div id="header">
+  <div id="logo"><span>🐍</span> Snake<span>IDE</span></div>
+  <button id="btn-run" onclick="runCode()">▶ Run</button>
+  <div class="hdr-spacer"></div>
+  <span id="status-bar">Snake Lang v1.0</span>
 </div>
-<div id="body">
+<div id="main">
   <div id="sidebar">
-    <div id="sb-title">Explorer</div>
-    <div id="sb-actions">
-      <button onclick="newFile()">+ New</button>
-      <button onclick="deleteFile()">Delete</button>
+    <div id="sidebar-header">
+      Explorer
+      <button onclick="newFile()" title="New File">+</button>
     </div>
     <div id="file-list"></div>
+    <div id="outline-header">Outline</div>
+    <div id="outline-list"></div>
   </div>
   <div id="editor-area">
     <div id="tabs"></div>
-    <div id="find-bar">
-      <input type="text" id="find-input" placeholder="Find..." oninput="findInCode(this.value)" onkeydown="findKey(event)" autocomplete="off">
+    <div id="find-bar" id="find-bar">
+      <input id="find-input" placeholder="Find..." oninput="doFind()">
+      <input id="replace-input" placeholder="Replace...">
+      <button onclick="findPrev()">◀</button>
+      <button onclick="findNext()">▶</button>
+      <button onclick="replaceOne()">Replace</button>
+      <button onclick="replaceAll()">All</button>
+      <button id="btn-case" onclick="toggleCase()" title="Match Case">Aa</button>
+      <button id="btn-regex" onclick="toggleRegex()" title="Regex">.*</button>
       <span id="find-count"></span>
-      <button class="fb-btn" onclick="findNext()">&#8593;</button>
-      <button class="fb-btn" onclick="findPrev()">&#8595;</button>
-      <button class="fb-btn" onclick="toggleFind(false)">&#x2715;</button>
+      <button onclick="closeFindBar()" style="margin-left:auto">✕</button>
     </div>
     <div id="editor-wrap">
-      <div id="lnums">1</div>
-      <textarea id="editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
-    </div>
-    <div id="statusbar">
-      <span id="sb-pos">Ln 1, Col 1</span>
-      <span id="sb-sel"></span>
-      <span style="margin-left:auto;">Snake Lang</span>
-      <span>UTF-8</span>
+      <div id="line-numbers"></div>
+      <div id="code-container">
+        <div id="highlight-layer"></div>
+        <textarea id="editor" spellcheck="false"></textarea>
+      </div>
+      <div id="autocomplete"></div>
     </div>
   </div>
 </div>
-<div id="terminal">
-  <div id="term-hdr">
-    <span class="ptab active">TERMINAL</span>
-    <span class="ptab">OUTPUT</span>
-    <span style="margin-left:auto;cursor:pointer;color:#555;font-size:14px;" onclick="clearTerm()">&#x2715;</span>
+<div id="terminal-wrap">
+  <div id="terminal-header">
+    Terminal
+    <button onclick="clearTerminal()">Clear</button>
   </div>
-  <div id="term-out"><div class="tl info">Snake IDE Terminal &#8212; Ctrl+Enter to run &#8226; type 'help' for commands</div></div>
-  <div id="term-in-row">
-    <span id="term-prompt">snake:~$</span>
-    <input type="text" id="term-in" spellcheck="false" autocomplete="off" placeholder="type a command...">
+  <div id="terminal"></div>
+  <div id="terminal-input-row">
+    <span id="terminal-prompt">snake&gt;</span>
+    <input id="terminal-input" placeholder="Type command..." onkeydown="termKey(event)">
   </div>
 </div>
+</body>
 <script>
-// VFS - Virtual File System
-const VFS = {
-  files: [
-    { name: 'main.snk', active: true, modified: false, content: `-- Snake Lang v2.0 Demo
--- Ctrl+Enter to run
+// ═══════════════════════════════════════════════════════
+//  SNAKE LANG ENGINE
+// ═══════════════════════════════════════════════════════
 
-fn greet(name) {
-  say "Xin chao, {name}!"
-}
-
-fn factorial(n) {
-  when (n <= 1) { give 1 }
-  give n * factorial(n - 1)
-}
-
-fn fib(n) {
-  when (n <= 1) { give n }
-  give fib(n-1) + fib(n-2)
-}
-
-greet("Snake IDE")
-
--- Tinh tong 1..100
-let total = 0
-let i = 1
-loop (i <= 100) { total :+ i  i :+ 1 }
-say "Sum 1..100 = {total}"
-
--- Mang (Array)
-let nums = [3, 1, 4, 1, 5, 9, 2, 6]
-say "Array: {nums}"
-say "Size: {size(nums)}"
-
--- each..in loop
-each n in nums {
-  when (n > 4) { say "  > 4: {n}" }
-}
-
--- De quy
-say "10! = {factorial(10)}"
-say "fib(10) = {fib(10)}"
-
--- String
-say upper("hello snake lang")
-say "PI = {PI}"
-say "sqrt(2) = {sqrt(2)}"
-
--- Dieu kien long nhau
-let score = 85
-when (score >= 90) {
-  say "Xuat sac"
-} otherwise when (score >= 70) {
-  say "Kha"
-} otherwise {
-  say "Trung binh"
-}` },
-    { name: 'examples.snk', active: false, modified: false, content: `-- Snake Lang Examples
-
--- 1. Functions
-fn add(a, b) { give a + b }
-fn square(x) { give x ^ 2 }
-say "add(3,4) = {add(3,4)}"
-say "square(7) = {square(7)}"
-
--- 2. String ops
-let s = "Hello World"
-say upper(s)
-say lower(s)
-say size(s)
-say trim("  spaces  ")
-
--- 3. Arrays
-let arr = [10, 20, 30, 40, 50]
-push(arr, 60)
-say arr
-say pop(arr)
-say has(arr, 30)
-
--- 4. Math
-say "max(3,7,2) = {max(3,7,2)}"
-say "min(3,7,2) = {min(3,7,2)}"
-say "abs(-42) = {abs(-42)}"
-say "floor(3.7) = {floor(3.7)}"
-say "ceil(3.2) = {ceil(3.2)}"` }
-  ],
-  openTabs: ['main.snk'],
-  render() {
-    const fl = document.getElementById('file-list');
-    fl.innerHTML = this.files.map(f =>
-      `<div class="fi ${f.active?'active':''} ${f.modified?'modified':''}" onclick="VFS.open('${f.name}')">
-        <span style="color:#e2c08d;font-size:11px;">&#x1F4C4;</span>
-        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;">${f.name}</span>
-        <span class="fi-dot"></span>
-      </div>`
-    ).join('');
-    const tb = document.getElementById('tabs');
-    tb.innerHTML = this.openTabs.filter(n => this.files.find(f=>f.name===n)).map(n => {
-      const f = this.files.find(x=>x.name===n);
-      return `<div class="tab ${f.active?'active':''} ${f.modified?'modified':''}" onclick="VFS.open('${n}')">
-        <span style="color:#e2c08d;font-size:11px;">&#x1F4C4;</span>${n}
-        <span class="tab-x" onclick="event.stopPropagation();VFS.closeTab('${n}')">&#x2715;</span>
-      </div>`;
-    }).join('');
-  },
-  open(name) {
-    const cur = this.files.find(f=>f.active);
-    if (cur) cur.content = editor.value;
-    this.files.forEach(f => f.active = (f.name===name));
-    if (!this.openTabs.includes(name)) this.openTabs.push(name);
-    this.render();
-    const f = this.files.find(f=>f.name===name);
-    editor.value = f.content;
-    updateLineNums(); updateStatus();
-  },
-  save() {
-    const f = this.files.find(f=>f.active);
-    if (f) { f.content = editor.value; f.modified = false; this.render(); }
-  },
-  saveAll() {
-    const cur = this.files.find(f=>f.active);
-    if (cur) cur.content = editor.value;
-    this.files.forEach(f => f.modified = false);
-    this.render(); tlog('All files saved.', 'ok');
-  },
-  newFile() {
-    const n = prompt('File name:'); if (!n) return;
-    const name = n.includes('.') ? n : n + '.snk';
-    if (this.files.find(f=>f.name===name)) { tlog('File already exists: '+name,'warn'); return; }
-    const cur = this.files.find(f=>f.active);
-    if (cur) cur.content = editor.value;
-    this.files.forEach(f => f.active = false);
-    this.files.push({name, active:true, modified:false, content:'-- '+name+'\n'});
-    this.openTabs.push(name);
-    this.render(); editor.value = '-- '+name+'\n'; updateLineNums();
-  },
-  deleteFile() {
-    if (this.files.length===1) { tlog('Cannot delete last file','warn'); return; }
-    const f = this.files.find(f=>f.active);
-    if (!f || !confirm('Delete '+f.name+'?')) return;
-    this.files = this.files.filter(x=>x.name!==f.name);
-    this.openTabs = this.openTabs.filter(n=>n!==f.name);
-    const next = this.files[0]; next.active = true;
-    if (!this.openTabs.includes(next.name)) this.openTabs.push(next.name);
-    this.render(); editor.value = next.content; updateLineNums();
-  },
-  closeTab(name) {
-    this.openTabs = this.openTabs.filter(n=>n!==name);
-    const f = this.files.find(x=>x.name===name);
-    if (f && f.active) {
-      if (this.openTabs.length > 0) this.open(this.openTabs[this.openTabs.length-1]);
-      else { const o = this.files.find(x=>x.name!==name); if(o){this.openTabs.push(o.name);this.open(o.name);} }
-    } else this.render();
-  },
-  renameFile(o, n) {
-    const f = this.files.find(x=>x.name===o); if(!f){tlog('Not found','err');return;}
-    const nn = n.includes('.')?n:n+'.snk'; f.name = nn;
-    this.openTabs = this.openTabs.map(x=>x===o?nn:x);
-    this.render(); tlog('Renamed to '+nn,'ok');
-  }
+// ── Tokenizer ──────────────────────────────────────────
+const TT = {
+  NUM:'NUM',STR:'STR',IDENT:'IDENT',KW:'KW',OP:'OP',
+  LPAREN:'LPAREN',RPAREN:'RPAREN',LBRACE:'LBRACE',RBRACE:'RBRACE',
+  LBRACKET:'LBRACKET',RBRACKET:'RBRACKET',COMMA:'COMMA',
+  COLON:'COLON',DOT:'DOT',SEMI:'SEMI',NEWLINE:'NEWLINE',EOF:'EOF',
+  ARROW:'ARROW',QUESTION:'QUESTION'
 };
 
-function newFile() { VFS.newFile(); }
-function deleteFile() { VFS.deleteFile(); }
+const KEYWORDS = new Set([
+  'let','const','fn','give','when','otherwise','loop','repeat','as',
+  'each','in','try','catch','throw','stop','skip','match','case',
+  'true','false','null','and','or','not'
+]);
 
-// TERMINAL
-function tlog(msg, cls) {
-  const d = document.createElement('div');
-  d.className = 'tl' + (cls?' '+cls:'');
-  d.textContent = msg;
-  const out = document.getElementById('term-out');
-  out.appendChild(d); out.scrollTop = out.scrollHeight;
+class SnakeError extends Error {
+  constructor(msg, line=0, col=0){
+    super(msg); this.snakeLine=line; this.snakeCol=col;
+  }
 }
-function clearTerm() { document.getElementById('term-out').innerHTML = ''; }
 
-const termIn = document.getElementById('term-in');
-const hist = []; let histIdx = -1;
-termIn.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const cmd = termIn.value.trim(); if (!cmd) return;
-    hist.unshift(cmd); histIdx = -1;
-    tlog('snake:~$ ' + cmd, 'cmd');
-    const p = cmd.split(/\s+/);
-    switch(p[0].toLowerCase()) {
-      case 'run': Engine.execute(); break;
-      case 'clear': case 'cls': clearTerm(); break;
-      case 'save': VFS.save(); tlog('Saved.','ok'); break;
-      case 'ls': VFS.files.forEach(f=>tlog('  '+(f.active?'> ':' ')+f.name+(f.modified?' [M]':''))); break;
-      case 'new': VFS.newFile(); break;
-      case 'rm': if(p[1]){const f=VFS.files.find(x=>x.name===p[1]);if(f){VFS.files=VFS.files.filter(x=>x.name!==p[1]);VFS.openTabs=VFS.openTabs.filter(n=>n!==p[1]);if(f.active&&VFS.files.length){VFS.files[0].active=true;VFS.open(VFS.files[0].name);}else VFS.render();tlog('Deleted: '+p[1],'ok');}else tlog('Not found: '+p[1],'err');}break;
-      case 'rename': if(p[1]&&p[2])VFS.renameFile(p[1],p[2]);else tlog('Usage: rename <old> <new>','warn');break;
-      case 'cat': if(p[1]){const f=VFS.files.find(x=>x.name===p[1]);if(f)tlog(f.content);else tlog('Not found: '+p[1],'err');}break;
-      case 'date': tlog(new Date().toLocaleString()); break;
-      case 'echo': tlog(p.slice(1).join(' ')); break;
-      case 'version': tlog('Snake IDE v2.0 — Snake Lang custom scripting'); break;
-      case 'help': ['run','clear','save','ls','new','rm <f>','rename <o> <n>','cat <f>','date','echo <t>','version'].forEach(c=>tlog('  '+c)); break;
-      default: tlog("Unknown: '"+p[0]+"' — type 'help'", 'err');
+function tokenize(src){
+  const tokens=[];
+  let i=0, line=1, col=1;
+  const peek=(n=0)=>src[i+n];
+  const adv=()=>{const c=src[i++];if(c==='\n'){line++;col=1;}else col++;return c;};
+  while(i<src.length){
+    const c=peek();
+    // skip whitespace (not newline)
+    if(c===' '||c==='\t'||c==='\r'){adv();continue;}
+    // newline
+    if(c==='\n'){adv();tokens.push({t:TT.NEWLINE,v:'\n',line,col});continue;}
+    // comment
+    if(c==='#'){while(i<src.length&&peek()!=='\n')adv();continue;}
+    // string
+    if(c==='"'||c==="'"){
+      const q=adv();let s='';const sl=line,sc=col;
+      while(i<src.length&&peek()!==q){
+        if(peek()==='\\'){adv();s+=adv();}else s+=adv();
+      }
+      if(i>=src.length)throw new SnakeError('Unterminated string',sl,sc);
+      adv();tokens.push({t:TT.STR,v:s,line:sl,col:sc});continue;
     }
-    termIn.value = '';
-  }
-  if (e.key==='ArrowUp'){if(histIdx<hist.length-1)histIdx++;termIn.value=hist[histIdx]||'';}
-  if (e.key==='ArrowDown'){if(histIdx>0)histIdx--;else{histIdx=-1;termIn.value='';return;}termIn.value=hist[histIdx]||'';}
-  if (e.ctrlKey&&e.key==='l'){e.preventDefault();clearTerm();}
-});
-
-// EDITOR
-const editor = document.getElementById('editor');
-const lnums = document.getElementById('lnums');
-
-function updateLineNums() {
-  const n = editor.value.split('\n').length;
-  lnums.textContent = Array.from({length:n},(_,i)=>i+1).join('\n');
-}
-function updateStatus() {
-  const val = editor.value.substring(0, editor.selectionStart);
-  const ln = val.split('\n').length;
-  const col = val.split('\n').pop().length + 1;
-  document.getElementById('sb-pos').textContent = 'Ln '+ln+', Col '+col;
-  const sel = Math.abs(editor.selectionEnd - editor.selectionStart);
-  const selEl = document.getElementById('sb-sel');
-  selEl.textContent = sel ? '('+sel+' selected)' : '';
-}
-editor.addEventListener('input', () => { updateLineNums(); const f=VFS.files.find(f=>f.active); if(f){f.content=editor.value;f.modified=true;VFS.render();} });
-editor.addEventListener('click', updateStatus);
-editor.addEventListener('keyup', updateStatus);
-editor.addEventListener('scroll', () => { lnums.scrollTop = editor.scrollTop; });
-
-editor.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key==='Enter') { e.preventDefault(); Engine.execute(); return; }
-  if (e.ctrlKey && e.key==='s') { e.preventDefault(); VFS.save(); tlog('Saved ✓','ok'); return; }
-  if (e.ctrlKey && e.shiftKey && e.key==='S') { e.preventDefault(); VFS.saveAll(); return; }
-  if (e.ctrlKey && e.key==='f') { e.preventDefault(); toggleFind(); return; }
-  if (e.ctrlKey && e.key==='n') { e.preventDefault(); VFS.newFile(); return; }
-  if (e.ctrlKey && e.key==='/') { e.preventDefault(); commentLine(); return; }
-  if (e.ctrlKey && e.key==='d') { e.preventDefault(); duplicateLine(); return; }
-  if (e.key==='Escape') { toggleFind(false); return; }
-  if (e.key==='Tab') {
-    e.preventDefault();
-    const s=editor.selectionStart, en=editor.selectionEnd, val=editor.value;
-    if (s!==en) {
-      const before=val.substring(0,s), sel=val.substring(s,en), after=val.substring(en);
-      if (e.shiftKey) { const u=sel.replace(/^    /gm,''); editor.value=before+u+after; editor.selectionStart=s; editor.selectionEnd=s+u.length; }
-      else { const ind=sel.replace(/^/gm,'    '); editor.value=before+ind+after; editor.selectionStart=s; editor.selectionEnd=s+ind.length; }
-    } else {
-      editor.value=val.substring(0,s)+'    '+val.substring(en);
-      editor.selectionStart=editor.selectionEnd=s+4;
+    // number
+    if(c>='0'&&c<='9'||(c==='-'&&peek(1)>='0'&&peek(1)<='9'&&(tokens.length===0||[TT.OP,TT.COMMA,TT.LPAREN,TT.LBRACKET,TT.COLON,TT.NEWLINE].includes(tokens[tokens.length-1].t)))){
+      let n='';const nl=line,nc=col;
+      if(peek()==='-')n+=adv();
+      while(i<src.length&&(peek()>='0'&&peek()<='9'))n+=adv();
+      if(peek()==='.'&&peek(1)>='0'&&peek(1)<='9'){n+=adv();while(i<src.length&&peek()>='0'&&peek()<='9')n+=adv();}
+      tokens.push({t:TT.NUM,v:parseFloat(n),line:nl,col:nc});continue;
     }
-    updateLineNums(); return;
+    // ident / keyword
+    if(c>='a'&&c<='z'||c>='A'&&c<='Z'||c==='_'){
+      let id='';const il=line,ic=col;
+      while(i<src.length&&(peek()>='a'&&peek()<='z'||peek()>='A'&&peek()<='Z'||peek()==='_'||peek()>='0'&&peek()<='9'))id+=adv();
+      const t=KEYWORDS.has(id)?TT.KW:TT.IDENT;
+      tokens.push({t,v:id,line:il,col:ic});continue;
+    }
+    // two-char ops
+    const two=src.slice(i,i+2);
+    if(two==='=>'){tokens.push({t:TT.ARROW,v:'=>',line,col});i+=2;col+=2;continue;}
+    if(two==='=='){tokens.push({t:TT.OP,v:'==',line,col});i+=2;col+=2;continue;}
+    if(two==='!='){tokens.push({t:TT.OP,v:'!=',line,col});i+=2;col+=2;continue;}
+    if(two==='<='){tokens.push({t:TT.OP,v:'<=',line,col});i+=2;col+=2;continue;}
+    if(two==='>='){tokens.push({t:TT.OP,v:'>=',line,col});i+=2;col+=2;continue;}
+    if(two==='..'){tokens.push({t:TT.OP,v:'..',line,col});i+=2;col+=2;continue;}
+    // single-char
+    const singles={'(':TT.LPAREN,')':TT.RPAREN,'{':TT.LBRACE,'}':TT.RBRACE,
+      '[':TT.LBRACKET,']':TT.RBRACKET,',':TT.COMMA,':':TT.COLON,
+      '.':TT.DOT,';':TT.SEMI,'?':TT.QUESTION};
+    if(singles[c]){tokens.push({t:singles[c],v:c,line,col});adv();continue;}
+    if('+-*/%<>=!&|^~'.includes(c)){tokens.push({t:TT.OP,v:c,line,col});adv();continue;}
+    adv(); // skip unknown
   }
-  if (e.key==='Enter') {
-    const s=editor.selectionStart, val=editor.value;
-    const lineStart=val.lastIndexOf('\n',s-1)+1;
-    const line=val.substring(lineStart,s);
-    const indent=line.match(/^(\s*)/)[1];
-    const extra=line.trimEnd().endsWith('{')?'    ':'';
-    e.preventDefault();
-    const ins='\n'+indent+extra;
-    editor.value=val.substring(0,s)+ins+val.substring(editor.selectionEnd);
-    editor.selectionStart=editor.selectionEnd=s+ins.length;
-    updateLineNums(); return;
-  }
-});
-
-function commentLine() {
-  const s=editor.selectionStart, en=editor.selectionEnd, val=editor.value;
-  const ls=val.lastIndexOf('\n',s-1)+1;
-  const le=val.indexOf('\n',en); const end=le===-1?val.length:le;
-  const line=val.substring(ls,end);
-  const nl=line.trimStart().startsWith('--')?line.replace(/^(\s*)--\s?/,'$1'):line.replace(/^(\s*)/,'$1-- ');
-  editor.value=val.substring(0,ls)+nl+val.substring(end);
-  const d=nl.length-line.length; editor.selectionStart=s+d; editor.selectionEnd=en+d;
-  updateLineNums();
+  tokens.push({t:TT.EOF,v:'',line,col});
+  return tokens;
 }
-function duplicateLine() {
-  const s=editor.selectionStart, val=editor.value;
-  const ls=val.lastIndexOf('\n',s-1)+1;
-  const le=val.indexOf('\n',s); const end=le===-1?val.length:le;
-  const line=val.substring(ls,end);
-  editor.value=val.substring(0,end)+'\n'+line+val.substring(end);
-  editor.selectionStart=editor.selectionEnd=s+line.length+1;
-  updateLineNums();
-}
-
-// FIND
-let findMatches=[], findIdx=0;
-function toggleFind(show) {
-  const fb=document.getElementById('find-bar');
-  if (show===false) { fb.classList.remove('show'); return; }
-  fb.classList.toggle('show');
-  if (fb.classList.contains('show')) { document.getElementById('find-input').focus(); document.getElementById('find-input').select(); }
-}
-function findInCode(q) {
-  findMatches=[]; findIdx=0;
-  if (!q) { document.getElementById('find-count').textContent=''; return; }
-  const text=editor.value, low=text.toLowerCase(), ql=q.toLowerCase();
-  let i=0; while((i=low.indexOf(ql,i))!==-1){findMatches.push(i);i+=ql.length;}
-  document.getElementById('find-count').textContent=findMatches.length?(findIdx+1)+'/'+findMatches.length:'No results';
-  if (findMatches.length) selMatch(0);
-}
-function selMatch(i) {
-  const q=document.getElementById('find-input').value;
-  editor.focus(); editor.setSelectionRange(findMatches[i],findMatches[i]+q.length);
-  document.getElementById('find-count').textContent=(i+1)+'/'+findMatches.length;
-}
-function findNext(){if(!findMatches.length)return;findIdx=(findIdx+1)%findMatches.length;selMatch(findIdx);}
-function findPrev(){if(!findMatches.length)return;findIdx=(findIdx-1+findMatches.length)%findMatches.length;selMatch(findIdx);}
-function findKey(e){if(e.key==='Enter'){e.shiftKey?findPrev():findNext();}if(e.key==='Escape')toggleFind(false);}
-
-// BOOT
-VFS.render();
-editor.value = VFS.files[0].content;
-updateLineNums();
 </script>
 <script>
-class Env{constructor(p){this.v=new Map();this.p=p;}get(n){if(this.v.has(n))return this.v.get(n);if(this.p)return this.p.get(n);throw new Error("Undefined: '"+n+"'");}set(n,v){this.v.set(n,v);}assign(n,v){if(this.v.has(n)){this.v.set(n,v);return;}if(this.p){this.p.assign(n,v);return;}throw new Error("Undeclared '"+n+"'");}}
-const Engine={
-  MAX_ITER:50000,
-  execute(){
-    const src=editor.value;
-    tlog('Running...','info');const t0=performance.now();
-    try{const env=new Env(null);this.builtins(env);this.execBlock(this.parse(this.tokenize(src)),env);tlog('Done in '+(performance.now()-t0).toFixed(1)+'ms','ok');}
-    catch(e){tlog(e.message,'err');}
-  },
-  builtins(env){
-    ['say','ask','size','num','text','floor','ceil','abs','rand','sqrt','max','min','type','upper','lower','trim','split','join','push','pop','has'].forEach(n=>env.set(n,{__b__:n}));
-    env.set('PI',Math.PI);env.set('E',Math.E);env.set('INF',Infinity);
-  },
-  tokenize(src){
-    const t=[],push=(a,b)=>t.push({t:a,v:b});let i=0;
-    while(i<src.length){
-      if(/\s/.test(src[i])){i++;continue;}
-      if(src[i]==='-'&&src[i+1]==='-'){while(i<src.length&&src[i]!=='\n')i++;continue;}
-      if(src[i]==='#'&&src[i+1]==='['){i+=2;while(i<src.length&&!(src[i]===']'&&src[i+1]==='#'))i++;i+=2;continue;}
-      if(src[i]==='"'){let s='';i++;while(i<src.length&&src[i]!=='"'){if(src[i]==='\\'){i++;s+=({n:'\n',t:'\t','"':'"','\\':'\\'}[src[i]]||src[i]);i++;}else s+=src[i++];}i++;push('STR',s);continue;}
-      if(/\d/.test(src[i])){let n='';while(i<src.length&&/[\d.]/.test(src[i]))n+=src[i++];push('NUM',parseFloat(n));continue;}
-      const t2=src.slice(i,i+2);if([':+',':-',':*',':/','==','!=','<=','>=','~>'].includes(t2)){push('OP',t2);i+=2;continue;}
-      const c=src[i];
-      if(c==='~'){push('OP','~');i++;continue;}if('+-*/%^'.includes(c)){push('OP',c);i++;continue;}
-      if(c==='='){push('=','=');i++;continue;}if('<>!&|'.includes(c)){push('OP',c);i++;continue;}
-      if('(){}[];,'.includes(c)){push(c,null);i++;continue;}
-      if(/[a-zA-Z_]/.test(c)){let id='';while(i<src.length&&/\w/.test(src[i]))id+=src[i++];const KW=['let','fn','give','when','otherwise','loop','repeat','stop','skip','yes','no','void','and','or','not','each','in'];push(KW.includes(id)?'KW':'ID',id);continue;}
-      i++;
-    }
-    return t;
-  },
-  parse(toks){
-    let p=0;
-    const pk=()=>toks[p];const chk=(t,v)=>{const k=pk();return k&&k.t===t&&(v===undefined||k.v===v);};
-    const eat=(t,v)=>{const k=toks[p];if(!k)throw new Error('Unexpected end');if(k.t!==t)throw new Error('Expected '+t+' got '+k.v);if(v!==undefined&&k.v!==v)throw new Error('Expected '+v);p++;return k;};
-    const opt=(t,v)=>{if(chk(t,v)){p++;return true;}return false;};
-    const block=()=>{eat('{');const s=[];while(!chk('}')){if(!pk())throw new Error('Unclosed {');s.push(stmt());}eat('}');return s;};
-    const stmt=()=>{
-      if(!pk())throw new Error('Unexpected end');
-      if(chk('KW','fn')){eat('KW','fn');const n=eat('ID').v;eat('(');const ps=[];while(!chk(')')){ps.push(eat('ID').v);opt(',');}eat(')');return{t:'Fn',n,ps,b:block()};}
-      if(chk('KW','let')){eat('KW','let');const n=eat('ID').v;let v=null;if(opt('='))v=expr();opt(';');return{t:'Let',n,v};}
-      if(chk('KW','when')){eat('KW','when');eat('(');const c=expr();eat(')');const th=block();let el=null;if(chk('KW','otherwise')){eat('KW','otherwise');el=chk('KW','when')?[stmt()]:block();}return{t:'When',c,th,el};}
-      if(chk('KW','loop')){eat('KW','loop');eat('(');const c=expr();eat(')');return{t:'Loop',c,b:block()};}
-      if(chk('KW','repeat')){eat('KW','repeat');const c=expr();return{t:'Rep',c,b:block()};}
-      if(chk('KW','each')){eat('KW','each');const n=eat('ID').v;eat('KW','in');const arr=expr();return{t:'Each',n,arr,b:block()};}
-      if(chk('KW','give')){eat('KW','give');const v=(chk(';')||chk('}'))?null:expr();opt(';');return{t:'Give',v};}
-      if(chk('KW','stop')){eat('KW');opt(';');return{t:'Stop'};}
-      if(chk('KW','skip')){eat('KW');opt(';');return{t:'Skip'};}
-      if(chk('KW','say')||chk('ID','say')){eat(pk().t,'say');const args=[];if(chk('(')){eat('(');while(!chk(')')){args.push(expr());opt(',');}eat(')');}else args.push(expr());opt(';');return{t:'Expr',e:{t:'Call',n:'say',args}};}
-      if(chk('ID')){
-        const n=eat('ID').v;
-        if(chk('OP',':+')||chk('OP',':-')||chk('OP',':*')||chk('OP',':/')){const op=eat('OP').v[1];const v=expr();opt(';');return{t:'Asgn',n,v:{t:'Bin',op,l:{t:'Var',n},r:v}};}
-        if(opt('=')){const v=expr();opt(';');return{t:'Asgn',n,v};}
-        if(chk('(')){eat('(');const args=[];while(!chk(')')){args.push(expr());opt(',');}eat(')');opt(';');return{t:'Expr',e:{t:'Call',n,args}};}
-        p--;
+// ── Parser ─────────────────────────────────────────────
+class Parser {
+  constructor(tokens){
+    this.tokens=tokens.filter(t=>t.t!==TT.NEWLINE&&t.t!==TT.SEMI);
+    this.pos=0;
+  }
+  peek(n=0){return this.tokens[this.pos+n]||{t:TT.EOF,v:''};}
+  adv(){return this.tokens[this.pos++]||{t:TT.EOF,v:''};}
+  expect(t,v){
+    const tok=this.adv();
+    if(tok.t!==t||(v!==undefined&&tok.v!==v))
+      throw new SnakeError(`Expected ${v||t} got '${tok.v}'`,tok.line,tok.col);
+    return tok;
+  }
+  match(t,v){
+    if(this.peek().t===t&&(v===undefined||this.peek().v===v)){this.adv();return true;}
+    return false;
+  }
+  parseProgram(){
+    const stmts=[];
+    while(this.peek().t!==TT.EOF)stmts.push(this.parseStmt());
+    return {type:'Program',body:stmts};
+  }
+  parseStmt(){
+    const tok=this.peek();
+    if(tok.t===TT.KW){
+      if(tok.v==='let'||tok.v==='const')return this.parseVarDecl();
+      if(tok.v==='fn'){
+        // fn name(...){} = declaration, fn(...){} = lambda expression statement
+        if(this.peek(1).t===TT.IDENT)return this.parseFnDecl();
+        return this.parseExprStmt();
       }
-      const e=expr();opt(';');return{t:'Expr',e};
-    };
-    const expr=()=>or();
-    const or=()=>{let l=and();while(chk('KW','or')||chk('OP','|')){p++;l={t:'Bin',op:'||',l,r:and()};}return l;};
-    const and=()=>{let l=cmp();while(chk('KW','and')||chk('OP','&')){p++;l={t:'Bin',op:'&&',l,r:cmp()};}return l;};
-    const cmp=()=>{let l=add();while(pk()&&pk().t==='OP'&&['==','!=','<','>','<=','>='].includes(pk().v)){const op=eat('OP').v;l={t:'Bin',op,l,r:add()};}return l;};
-    const add=()=>{let l=mul();while(pk()&&pk().t==='OP'&&['+','-','~'].includes(pk().v)){const op=eat('OP').v;l={t:'Bin',op,l,r:mul()};}return l;};
-    const mul=()=>{let l=un();while(pk()&&pk().t==='OP'&&['*','/','%','^'].includes(pk().v)){const op=eat('OP').v;l={t:'Bin',op,l,r:un()};}return l;};
-    const un=()=>{if(chk('KW','not')||chk('OP','!')){p++;return{t:'Un',op:'!',v:un()};}if(chk('OP','-')){p++;return{t:'Un',op:'-',v:un()};}return call();};
-    const call=()=>{if(pk()&&pk().t==='ID'&&toks[p+1]&&toks[p+1].t==='('){const n=eat('ID').v;eat('(');const args=[];while(!chk(')')){args.push(expr());opt(',');}eat(')');return{t:'Call',n,args};}return prim();};
-    const prim=()=>{
-      const k=pk();if(!k)throw new Error('Unexpected end');
-      if(k.t==='NUM'){p++;return{t:'Num',v:k.v};}if(k.t==='STR'){p++;return{t:'Str',v:k.v};}
-      if(chk('KW','yes')){p++;return{t:'Bool',v:true};}if(chk('KW','no')){p++;return{t:'Bool',v:false};}
-      if(chk('KW','void')){p++;return{t:'Void'};}
-      if(k.t==='['){eat('[');const els=[];while(!chk(']')){els.push(expr());opt(',');}eat(']');return{t:'Arr',els};}
-      if(k.t==='ID'){p++;return{t:'Var',n:k.v};}
-      if(k.t==='('){eat('(');const e=expr();eat(')');return e;}
-      throw new Error('Unexpected: '+k.v);
-    };
-    const stmts=[];while(p<toks.length)stmts.push(stmt());return stmts;
-  },
-  execBlock(ss,env){for(const s of ss){const r=this.execStmt(s,env);if(r&&(r.__g__!==undefined||r.__stop__||r.__skip__))return r;}},
-  execStmt(s,env){
-    switch(s.t){
-      case 'Let':env.set(s.n,s.v?this.eval(s.v,env):null);break;
-      case 'Asgn':env.assign(s.n,this.eval(s.v,env));break;
-      case 'Fn':env.set(s.n,{__fn__:true,ps:s.ps,b:s.b,cl:env});break;
-      case 'Expr':this.eval(s.e,env);break;
-      case 'Give':return{__g__:s.v?this.eval(s.v,env):null};
-      case 'Stop':return{__stop__:true};case 'Skip':return{__skip__:true};
-      case 'When':if(this.truthy(this.eval(s.c,env)))return this.execBlock(s.th,new Env(env));else if(s.el)return this.execBlock(s.el,new Env(env));break;
-      case 'Loop':{let n=0;while(this.truthy(this.eval(s.c,env))){if(++n>this.MAX_ITER)throw new Error('Infinite loop');const r=this.execBlock(s.b,new Env(env));if(r&&r.__stop__)break;if(r&&r.__g__!==undefined)return r;}break;}
-      case 'Rep':{const n=Math.floor(this.eval(s.c,env));for(let i=0;i<n;i++){const r=this.execBlock(s.b,new Env(env));if(r&&r.__stop__)break;if(r&&r.__g__!==undefined)return r;}break;}
-      case 'Each':{const arr=this.eval(s.arr,env);if(!Array.isArray(arr))throw new Error("'each' requires array");for(const item of arr){const fe=new Env(env);fe.set(s.n,item);const r=this.execBlock(s.b,fe);if(r&&r.__stop__)break;if(r&&r.__g__!==undefined)return r;}break;}
+      if(tok.v==='give')return this.parseGive();
+      if(tok.v==='when')return this.parseWhen();
+      if(tok.v==='loop')return this.parseLoop();
+      if(tok.v==='repeat')return this.parseRepeat();
+      if(tok.v==='each')return this.parseEach();
+      if(tok.v==='try')return this.parseTry();
+      if(tok.v==='throw')return this.parseThrow();
+      if(tok.v==='stop')return{type:'Stop',line:this.adv().line};
+      if(tok.v==='skip')return{type:'Skip',line:this.adv().line};
+      if(tok.v==='match')return this.parseMatch();
     }
-  },
-  eval(node,env){
-    switch(node.t){
-      case 'Num':return node.v;case 'Bool':return node.v;case 'Void':return null;
-      case 'Str':return this.interp(node.v,env);case 'Var':return env.get(node.n);
-      case 'Arr':return node.els.map(e=>this.eval(e,env));
-      case 'Un':if(node.op==='!')return!this.truthy(this.eval(node.v,env));if(node.op==='-')return-this.eval(node.v,env);break;
-      case 'Bin':{const L=this.eval(node.l,env),R=this.eval(node.r,env);
-        switch(node.op){
-          case '+':return(typeof L==='string'||typeof R==='string')?String(L)+String(R):L+R;
-          case '-':return L-R;case '*':return L*R;case '/':if(R===0)throw new Error('Division by zero');return L/R;
-          case '%':return L%R;case '^':return Math.pow(L,R);case '~':return String(L)+String(R);
-          case '==':return L===R;case '!=':return L!==R;case '<':return L<R;case '>':return L>R;case '<=':return L<=R;case '>=':return L>=R;
-          case '&&':return this.truthy(L)&&this.truthy(R);case '||':return this.truthy(L)||this.truthy(R);
-        }break;}
-      case 'Call':{const fn=env.get(node.n);const args=node.args.map(a=>this.eval(a,env));
-        if(fn&&fn.__b__)return this.builtin(fn.__b__,args);
-        if(fn&&fn.__fn__){const fe=new Env(fn.cl);fn.ps.forEach((p,i)=>fe.set(p,args[i]??null));const r=this.execBlock(fn.b,fe);return r?.__g__??null;}
-        throw new Error("'"+node.n+"' is not a function");}
+    return this.parseExprStmt();
+  }
+  parseVarDecl(){
+    const kw=this.adv();
+    const name=this.expect(TT.IDENT).v;
+    this.expect(TT.OP,'=');
+    const val=this.parseExpr();
+    return{type:'VarDecl',kind:kw.v,name,val,line:kw.line};
+  }
+  parseFnDecl(){
+    const kw=this.adv();
+    const name=this.expect(TT.IDENT).v;
+    this.expect(TT.LPAREN);
+    const params=this.parseParams();
+    this.expect(TT.RPAREN);
+    const body=this.parseBlock();
+    return{type:'FnDecl',name,params,body,line:kw.line};
+  }
+  parseParams(){
+    const params=[];
+    while(this.peek().t!==TT.RPAREN&&this.peek().t!==TT.EOF){
+      const name=this.expect(TT.IDENT).v;
+      let def=null;
+      if(this.peek().t===TT.OP&&this.peek().v==='='){this.adv();def=this.parseExpr();}
+      params.push({name,def});
+      if(!this.match(TT.COMMA))break;
+    }
+    return params;
+  }
+  parseBlock(){
+    this.expect(TT.LBRACE);
+    const stmts=[];
+    while(this.peek().t!==TT.RBRACE&&this.peek().t!==TT.EOF)stmts.push(this.parseStmt());
+    this.expect(TT.RBRACE);
+    return{type:'Block',body:stmts};
+  }
+  parseGive(){
+    const kw=this.adv();
+    const val=this.parseExpr();
+    return{type:'Give',val,line:kw.line};
+  }
+  parseWhen(){
+    const kw=this.adv();
+    const cond=this.parseExpr();
+    const then=this.parseBlock();
+    const branches=[];
+    while(this.peek().t===TT.KW&&this.peek().v==='otherwise'){
+      this.adv();
+      if(this.peek().t===TT.KW&&this.peek().v==='when'){
+        this.adv();
+        const c=this.parseExpr();
+        const b=this.parseBlock();
+        branches.push({cond:c,body:b});
+      } else {
+        const b=this.parseBlock();
+        branches.push({cond:null,body:b});
+        break;
+      }
+    }
+    return{type:'When',cond,then,branches,line:kw.line};
+  }
+  parseLoop(){
+    const kw=this.adv();
+    const body=this.parseBlock();
+    return{type:'Loop',body,line:kw.line};
+  }
+  parseRepeat(){
+    const kw=this.adv();
+    const count=this.parseExpr();
+    let iter=null;
+    if(this.peek().t===TT.KW&&this.peek().v==='as'){this.adv();iter=this.expect(TT.IDENT).v;}
+    const body=this.parseBlock();
+    return{type:'Repeat',count,iter,body,line:kw.line};
+  }
+  parseEach(){
+    const kw=this.adv();
+    const iter=this.expect(TT.IDENT).v;
+    this.expect(TT.KW,'in');
+    const arr=this.parseExpr();
+    const body=this.parseBlock();
+    return{type:'Each',iter,arr,body,line:kw.line};
+  }
+  parseTry(){
+    const kw=this.adv();
+    const tryBody=this.parseBlock();
+    this.expect(TT.KW,'catch');
+    this.expect(TT.LPAREN);
+    const errName=this.expect(TT.IDENT).v;
+    this.expect(TT.RPAREN);
+    const catchBody=this.parseBlock();
+    return{type:'TryCatch',tryBody,errName,catchBody,line:kw.line};
+  }
+  parseThrow(){
+    const kw=this.adv();
+    const val=this.parseExpr();
+    return{type:'Throw',val,line:kw.line};
+  }
+  parseMatch(){
+    const kw=this.adv();
+    const subject=this.parseExpr();
+    this.expect(TT.LBRACE);
+    const cases=[];
+    while(this.peek().t!==TT.RBRACE&&this.peek().t!==TT.EOF){
+      this.expect(TT.KW,'case');
+      const pattern=this.parseExpr();
+      const body=this.parseBlock();
+      cases.push({pattern,body});
+    }
+    this.expect(TT.RBRACE);
+    return{type:'Match',subject,cases,line:kw.line};
+  }
+  parseExprStmt(){
+    const expr=this.parseExpr();
+    return{type:'ExprStmt',expr};
+  }
+  parseExpr(){return this.parseTernary();}
+  parseTernary(){
+    let left=this.parseOr();
+    if(this.peek().t===TT.QUESTION){
+      this.adv();
+      const then=this.parseExpr();
+      this.expect(TT.COLON);
+      const else_=this.parseExpr();
+      return{type:'Ternary',cond:left,then,else:else_};
+    }
+    return left;
+  }
+  parseOr(){
+    let left=this.parseAnd();
+    while(this.peek().t===TT.KW&&this.peek().v==='or'){
+      this.adv();left={type:'BinOp',op:'or',left,right:this.parseAnd()};
+    }
+    return left;
+  }
+  parseAnd(){
+    let left=this.parseNot();
+    while(this.peek().t===TT.KW&&this.peek().v==='and'){
+      this.adv();left={type:'BinOp',op:'and',left,right:this.parseNot()};
+    }
+    return left;
+  }
+  parseNot(){
+    if(this.peek().t===TT.KW&&this.peek().v==='not'){
+      this.adv();return{type:'UnaryOp',op:'not',val:this.parseNot()};
+    }
+    return this.parseCompare();
+  }
+  parseCompare(){
+    let left=this.parseAdd();
+    const ops=['==','!=','<','>','<=','>='];
+    while(this.peek().t===TT.OP&&ops.includes(this.peek().v)){
+      const op=this.adv().v;left={type:'BinOp',op,left,right:this.parseAdd()};
+    }
+    return left;
+  }
+  parseAdd(){
+    let left=this.parseMul();
+    while(this.peek().t===TT.OP&&(this.peek().v==='+'||this.peek().v==='-'||this.peek().v==='..')){
+      const op=this.adv().v;left={type:'BinOp',op,left,right:this.parseMul()};
+    }
+    return left;
+  }
+  parseMul(){
+    let left=this.parseUnary();
+    while(this.peek().t===TT.OP&&(this.peek().v==='*'||this.peek().v==='/'||this.peek().v==='%')){
+      const op=this.adv().v;left={type:'BinOp',op,left,right:this.parseUnary()};
+    }
+    return left;
+  }
+  parseUnary(){
+    if(this.peek().t===TT.OP&&this.peek().v==='-'){
+      this.adv();return{type:'UnaryOp',op:'-',val:this.parseUnary()};
+    }
+    return this.parsePostfix();
+  }
+  parsePostfix(){
+    let expr=this.parsePrimary();
+    while(true){
+      if(this.peek().t===TT.DOT){
+        this.adv();
+        const prop=this.expect(TT.IDENT).v;
+        if(this.peek().t===TT.LPAREN){
+          this.adv();
+          const args=this.parseArgs();
+          this.expect(TT.RPAREN);
+          expr={type:'MethodCall',obj:expr,method:prop,args};
+        } else {
+          expr={type:'FieldAccess',obj:expr,field:prop};
+        }
+      } else if(this.peek().t===TT.LBRACKET){
+        this.adv();
+        const idx=this.parseExpr();
+        this.expect(TT.RBRACKET);
+        expr={type:'IndexAccess',obj:expr,idx};
+      } else if(this.peek().t===TT.LPAREN){
+        this.adv();
+        const args=this.parseArgs();
+        this.expect(TT.RPAREN);
+        expr={type:'Call',callee:expr,args};
+      } else if(this.peek().t===TT.OP&&this.peek().v==='='){
+        // assignment
+        this.adv();
+        const val=this.parseExpr();
+        expr={type:'Assign',target:expr,val};
+      } else break;
+    }
+    return expr;
+  }
+  parseArgs(){
+    const args=[];
+    while(this.peek().t!==TT.RPAREN&&this.peek().t!==TT.EOF){
+      args.push(this.parseExpr());
+      if(!this.match(TT.COMMA))break;
+    }
+    return args;
+  }
+  parsePrimary(){
+    const tok=this.peek();
+    if(tok.t===TT.NUM){this.adv();return{type:'Num',val:tok.v};}
+    if(tok.t===TT.KW&&tok.v==='true'){this.adv();return{type:'Bool',val:true};}
+    if(tok.t===TT.KW&&tok.v==='false'){this.adv();return{type:'Bool',val:false};}
+    if(tok.t===TT.KW&&tok.v==='null'){this.adv();return{type:'Null'};}
+    if(tok.t===TT.STR){this.adv();return{type:'Str',val:tok.v};}
+    if(tok.t===TT.IDENT){this.adv();return{type:'Ident',name:tok.v,line:tok.line};}
+    if(tok.t===TT.LPAREN){
+      this.adv();const e=this.parseExpr();this.expect(TT.RPAREN);return e;
+    }
+    if(tok.t===TT.LBRACKET){
+      this.adv();
+      const items=[];
+      while(this.peek().t!==TT.RBRACKET&&this.peek().t!==TT.EOF){
+        items.push(this.parseExpr());
+        if(!this.match(TT.COMMA))break;
+      }
+      this.expect(TT.RBRACKET);
+      return{type:'Array',items};
+    }
+    if(tok.t===TT.LBRACE){
+      this.adv();
+      const pairs=[];
+      while(this.peek().t!==TT.RBRACE&&this.peek().t!==TT.EOF){
+        let key;
+        if(this.peek().t===TT.IDENT||this.peek().t===TT.STR)key=this.adv().v;
+        else throw new SnakeError('Expected object key',tok.line,tok.col);
+        this.expect(TT.COLON);
+        const val=this.parseExpr();
+        pairs.push({key,val});
+        if(!this.match(TT.COMMA))break;
+      }
+      this.expect(TT.RBRACE);
+      return{type:'Obj',pairs};
+    }
+    if(tok.t===TT.KW&&tok.v==='fn'){
+      this.adv();
+      this.expect(TT.LPAREN);
+      const params=this.parseParams();
+      this.expect(TT.RPAREN);
+      const body=this.parseBlock();
+      return{type:'FnExpr',params,body};
+    }
+    throw new SnakeError(`Unexpected token '${tok.v}'`,tok.line,tok.col);
+  }
+}
+</script>
+<script>
+// ── Evaluator ──────────────────────────────────────────
+class ReturnSignal{constructor(v){this.val=v;}}
+class StopSignal{}
+class SkipSignal{}
+class ThrowSignal{constructor(v){this.val=v;}}
+
+class Environment{
+  constructor(parent=null){this.vars=new Map();this.parent=parent;}
+  get(name){
+    if(this.vars.has(name))return this.vars.get(name);
+    if(this.parent)return this.parent.get(name);
+    throw new SnakeError(`Undefined variable '${name}'`);
+  }
+  set(name,val){
+    if(this.vars.has(name)){this.vars.set(name,val);return;}
+    if(this.parent&&this.parent.has(name)){this.parent.set(name,val);return;}
+    this.vars.set(name,val);
+  }
+  def(name,val){this.vars.set(name,val);}
+  has(name){return this.vars.has(name)||(this.parent?this.parent.has(name):false);}
+}
+
+class Interpreter{
+  constructor(outputFn){
+    this.output=outputFn;
+    this.globals=new Environment();
+    this._setupBuiltins();
+  }
+  _setupBuiltins(){
+    const G=this.globals;
+    const out=this.output;
+    G.def('PI',Math.PI);G.def('E',Math.E);G.def('INF',Infinity);
+    G.def('say',(...a)=>{out(a.map(v=>this._str(v)).join(' '));return null;});
+    G.def('ask',(p='')=>{return prompt(p)||'';});
+    G.def('size',(v)=>Array.isArray(v)?v.length:typeof v==='string'?v.length:typeof v==='object'&&v?Object.keys(v).length:0);
+    G.def('num',(v)=>Number(v));
+    G.def('text',(v)=>this._str(v));
+    G.def('floor',(v)=>Math.floor(v));
+    G.def('ceil',(v)=>Math.ceil(v));
+    G.def('abs',(v)=>Math.abs(v));
+    G.def('rand',(a=0,b=1)=>Math.random()*(b-a)+a);
+    G.def('sqrt',(v)=>Math.sqrt(v));
+    G.def('max',(...a)=>Math.max(...a.flat()));
+    G.def('min',(...a)=>Math.min(...a.flat()));
+    G.def('type',(v)=>Array.isArray(v)?'array':v===null?'null':typeof v);
+    G.def('upper',(v)=>String(v).toUpperCase());
+    G.def('lower',(v)=>String(v).toLowerCase());
+    G.def('trim',(v)=>String(v).trim());
+    G.def('split',(v,d=',')=>String(v).split(d));
+    G.def('join',(arr,d=',')=>arr.join(d));
+    G.def('push',(arr,v)=>{arr.push(v);return arr;});
+    G.def('pop',(arr)=>arr.pop());
+    G.def('has',(obj,k)=>Array.isArray(obj)?obj.includes(k):k in (obj||{}));
+    G.def('keys',(obj)=>Object.keys(obj||{}));
+    G.def('now',()=>Date.now());
+    G.def('sort',(arr,fn=null)=>{const a=[...arr];fn?a.sort((x,y)=>fn(x,y)):a.sort();return a;});
+    G.def('reverse',(arr)=>[...arr].reverse());
+    G.def('map',(arr,fn)=>arr.map(v=>fn(v)));
+    G.def('filter',(arr,fn)=>arr.filter(v=>fn(v)));
+    G.def('reduce',(arr,fn,init)=>arr.reduce((a,v)=>fn(a,v),init));
+    G.def('tlog',(v)=>{out('[LOG] '+this._str(v));return null;});
+  }
+  _str(v){
+    if(v===null||v===undefined)return 'null';
+    if(typeof v==='boolean')return v?'true':'false';
+    if(Array.isArray(v))return '['+v.map(x=>this._str(x)).join(', ')+']';
+    if(typeof v==='object')return '{'+Object.entries(v).map(([k,vv])=>k+': '+this._str(vv)).join(', ')+'}';
+    if(typeof v==='function')return '<fn>';
+    return String(v);
+  }
+  _interpolate(s,env){
+    return s.replace(/\{([^}]+)\}/g,(_,expr)=>{
+      try{const t=tokenize(expr);const p=new Parser(t);const e=p.parseExpr();return this._str(this.evalExpr(e,env));}
+      catch(e){return '{'+expr+'}';}
+    });
+  }
+  run(src){
+    const tokens=tokenize(src);
+    const ast=new Parser(tokens).parseProgram();
+    const env=new Environment(this.globals);
+    for(const stmt of ast.body){
+      const r=this.evalStmt(stmt,env);
+      if(r instanceof ReturnSignal)break;
+    }
+  }
+  evalStmt(node,env){
+    switch(node.type){
+      case 'VarDecl':{
+        const v=this.evalExpr(node.val,env);
+        env.def(node.name,v);return null;
+      }
+      case 'FnDecl':{
+        const fn=this._makeFn(node.params,node.body,env);
+        env.def(node.name,fn);return null;
+      }
+      case 'Give':return new ReturnSignal(this.evalExpr(node.val,env));
+      case 'Stop':return new StopSignal();
+      case 'Skip':return new SkipSignal();
+      case 'Throw':{
+        const v=this.evalExpr(node.val,env);
+        throw new ThrowSignal(v);
+      }
+      case 'When':{
+        if(this._truthy(this.evalExpr(node.cond,env))){
+          return this.evalBlock(node.then,env);
+        }
+        for(const b of node.branches){
+          if(b.cond===null||this._truthy(this.evalExpr(b.cond,env))){
+            return this.evalBlock(b.body,env);
+          }
+        }
+        return null;
+      }
+      case 'Loop':{
+        while(true){
+          const r=this.evalBlock(node.body,env);
+          if(r instanceof StopSignal)break;
+          if(r instanceof ReturnSignal)return r;
+        }
+        return null;
+      }
+      case 'Repeat':{
+        const n=this.evalExpr(node.count,env);
+        for(let i=0;i<n;i++){
+          const inner=new Environment(env);
+          if(node.iter)inner.def(node.iter,i);
+          const r=this.evalBlock(node.body,inner);
+          if(r instanceof StopSignal)break;
+          if(r instanceof SkipSignal)continue;
+          if(r instanceof ReturnSignal)return r;
+        }
+        return null;
+      }
+      case 'Each':{
+        const arr=this.evalExpr(node.arr,env);
+        const items=Array.isArray(arr)?arr:Object.values(arr||{});
+        for(const item of items){
+          const inner=new Environment(env);
+          inner.def(node.iter,item);
+          const r=this.evalBlock(node.body,inner);
+          if(r instanceof StopSignal)break;
+          if(r instanceof SkipSignal)continue;
+          if(r instanceof ReturnSignal)return r;
+        }
+        return null;
+      }
+      case 'TryCatch':{
+        try{return this.evalBlock(node.tryBody,env);}
+        catch(e){
+          const inner=new Environment(env);
+          if(e instanceof ThrowSignal){
+            inner.def(node.errName,e.val);
+          } else {
+            inner.def(node.errName,{message:e.message||String(e),line:e.snakeLine||0});
+          }
+          return this.evalBlock(node.catchBody,inner);
+        }
+      }
+      case 'Match':{
+        const subj=this.evalExpr(node.subject,env);
+        for(const c of node.cases){
+          const pat=this.evalExpr(c.pattern,env);
+          if(subj===pat||this._str(subj)===this._str(pat)){
+            return this.evalBlock(c.body,env);
+          }
+        }
+        return null;
+      }
+      case 'ExprStmt':this.evalExpr(node.expr,env);return null;
+      case 'Block':return this.evalBlock(node,env);
+      default:return null;
+    }
+  }
+  evalBlock(block,parentEnv){
+    const env=new Environment(parentEnv);
+    for(const stmt of block.body){
+      const r=this.evalStmt(stmt,env);
+      if(r instanceof ReturnSignal||r instanceof StopSignal||r instanceof SkipSignal)return r;
     }
     return null;
-  },
-  interp(s,env){return s.replace(/\{([a-zA-Z_]\w*)\}/g,(_,n)=>{try{return this.str(env.get(n));}catch{return'{'+n+'}';}});},
-  builtin(n,a){
-    switch(n){
-      case 'say':tlog(a.map(x=>this.str(x)).join(' '));return null;
-      case 'ask':return prompt(a[0]||'');
-      case 'size':return Array.isArray(a[0])?a[0].length:typeof a[0]==='string'?a[0].length:0;
-      case 'num':return parseFloat(a[0]);case 'text':return this.str(a[0]);
-      case 'floor':return Math.floor(a[0]);case 'ceil':return Math.ceil(a[0]);
-      case 'abs':return Math.abs(a[0]);case 'rand':return Math.random()*(a[0]||1);
-      case 'sqrt':return Math.sqrt(a[0]);case 'max':return Math.max(...a);case 'min':return Math.min(...a);
-      case 'type':return Array.isArray(a[0])?'array':typeof a[0];
-      case 'upper':return String(a[0]).toUpperCase();case 'lower':return String(a[0]).toLowerCase();
-      case 'trim':return String(a[0]).trim();
-      case 'split':return String(a[0]).split(a[1]||'');
-      case 'join':return Array.isArray(a[0])?a[0].join(a[1]||''):String(a[0]);
-      case 'push':if(Array.isArray(a[0])){a[0].push(a[1]);return a[0];}return null;
-      case 'pop':return Array.isArray(a[0])?a[0].pop():null;
-      case 'has':return Array.isArray(a[0])?a[0].includes(a[1]):false;
+  }
+  evalExpr(node,env){
+    switch(node.type){
+      case 'Num':return node.val;
+      case 'Bool':return node.val;
+      case 'Null':return null;
+      case 'Str':return this._interpolate(node.val,env);
+      case 'Ident':{
+        try{return env.get(node.name);}
+        catch(e){throw new SnakeError(e.message,node.line);}
+      }
+      case 'Array':return node.items.map(i=>this.evalExpr(i,env));
+      case 'Obj':{
+        const o={};
+        for(const p of node.pairs)o[p.key]=this.evalExpr(p.val,env);
+        return o;
+      }
+      case 'FnExpr':return this._makeFn(node.params,node.body,env);
+      case 'BinOp':return this._binop(node.op,this.evalExpr(node.left,env),this.evalExpr(node.right,env));
+      case 'UnaryOp':{
+        const v=this.evalExpr(node.val,env);
+        if(node.op==='-')return -v;
+        if(node.op==='not')return !this._truthy(v);
+        return v;
+      }
+      case 'Ternary':return this._truthy(this.evalExpr(node.cond,env))?this.evalExpr(node.then,env):this.evalExpr(node.else,env);
+      case 'Assign':{
+        const val=this.evalExpr(node.val,env);
+        const t=node.target;
+        if(t.type==='Ident'){env.set(t.name,val);}
+        else if(t.type==='FieldAccess'){const o=this.evalExpr(t.obj,env);o[t.field]=val;}
+        else if(t.type==='IndexAccess'){const o=this.evalExpr(t.obj,env);const i=this.evalExpr(t.idx,env);o[i]=val;}
+        return val;
+      }
+      case 'FieldAccess':{
+        const o=this.evalExpr(node.obj,env);
+        if(o===null||o===undefined)throw new SnakeError('Cannot access field of null');
+        return o[node.field]??null;
+      }
+      case 'IndexAccess':{
+        const o=this.evalExpr(node.obj,env);
+        const i=this.evalExpr(node.idx,env);
+        return Array.isArray(o)?o[i]:o[i]??null;
+      }
+      case 'MethodCall':{
+        const o=this.evalExpr(node.obj,env);
+        const args=node.args.map(a=>this.evalExpr(a,env));
+        if(typeof o[node.method]==='function')return o[node.method](...args);
+        // array/string builtins
+        if(Array.isArray(o)){
+          if(node.method==='push'){o.push(...args);return o;}
+          if(node.method==='pop')return o.pop();
+          if(node.method==='size'||node.method==='length')return o.length;
+          if(node.method==='join')return o.join(args[0]??',');
+          if(node.method==='reverse')return [...o].reverse();
+          if(node.method==='has')return o.includes(args[0]);
+          if(node.method==='map')return o.map(v=>args[0](v));
+          if(node.method==='filter')return o.filter(v=>args[0](v));
+          if(node.method==='reduce')return o.reduce((a,v)=>args[0](a,v),args[1]);
+          if(node.method==='sort'){const a=[...o];args[0]?a.sort((x,y)=>args[0](x,y)):a.sort();return a;}
+          if(node.method==='slice')return o.slice(...args);
+          if(node.method==='indexOf')return o.indexOf(args[0]);
+        }
+        if(typeof o==='string'){
+          if(node.method==='upper')return o.toUpperCase();
+          if(node.method==='lower')return o.toLowerCase();
+          if(node.method==='trim')return o.trim();
+          if(node.method==='split')return o.split(args[0]??',');
+          if(node.method==='size'||node.method==='length')return o.length;
+          if(node.method==='has')return o.includes(args[0]);
+          if(node.method==='replace')return o.replace(args[0],args[1]);
+          if(node.method==='startsWith')return o.startsWith(args[0]);
+          if(node.method==='endsWith')return o.endsWith(args[0]);
+          if(node.method==='indexOf')return o.indexOf(args[0]);
+          if(node.method==='slice')return o.slice(...args);
+        }
+        if(typeof o==='object'&&o!==null){
+          if(node.method==='keys')return Object.keys(o);
+          if(node.method==='values')return Object.values(o);
+          if(node.method==='has')return node.method in o;
+          if(node.method==='size')return Object.keys(o).length;
+        }
+        throw new SnakeError(`No method '${node.method}' on ${this._str(o)}`);
+      }
+      case 'Call':{
+        const fn=this.evalExpr(node.callee,env);
+        const args=node.args.map(a=>this.evalExpr(a,env));
+        if(typeof fn==='function')return fn(...args);
+        throw new SnakeError(`'${this._str(fn)}' is not callable`);
+      }
+      default:return null;
     }
-  },
-  truthy(v){return v!==null&&v!==false&&v!==0&&v!=='';},
-  str(v){if(v===null)return'void';if(v===true)return'yes';if(v===false)return'no';if(Array.isArray(v))return'['+v.map(x=>Engine.str(x)).join(', ')+']';if(v&&v.__fn__)return'[fn]';return String(v);}
-};
+  }
+  _makeFn(params,body,closure){
+    return (...args)=>{
+      const env=new Environment(closure);
+      params.forEach((p,i)=>{
+        const v=args[i]!==undefined?args[i]:(p.def?this.evalExpr(p.def,closure):null);
+        env.def(p.name,v);
+      });
+      const r=this.evalBlock(body,env);
+      return r instanceof ReturnSignal?r.val:null;
+    };
+  }
+  _truthy(v){return v!==null&&v!==false&&v!==0&&v!==''&&v!==undefined;}
+  _binop(op,a,b){
+    switch(op){
+      case '+':return typeof a==='string'||typeof b==='string'?String(a)+String(b):a+b;
+      case '-':return a-b;case '*':return a*b;case '/':return b===0?Infinity:a/b;
+      case '%':return a%b;case '..':return String(a)+String(b);
+      case '==':return a===b;case '!=':return a!==b;
+      case '<':return a<b;case '>':return a>b;case '<=':return a<=b;case '>=':return a>=b;
+      case 'and':return this._truthy(a)&&this._truthy(b);
+      case 'or':return this._truthy(a)||this._truthy(b);
+      default:return null;
+    }
+  }
+}
 </script>
-</body>
+<script>
+// ═══════════════════════════════════════════════════════
+//  VFS & DEFAULT FILES
+// ═══════════════════════════════════════════════════════
+const MAIN_SNK = `# Snake Lang — Full Feature Demo
+# ─────────────────────────────────────────────────────
+
+# 1. Variables & constants
+let name = "Snake"
+const version = 1.0
+let pi_approx = PI
+
+say("Welcome to " .. name .. " v" .. text(version))
+say("PI ≈ " .. text(pi_approx))
+
+# 2. String interpolation
+let user = "World"
+say("Hello, {user}! PI = {PI}")
+
+# 3. Arithmetic & ternary
+let x = 10
+let y = 3
+say("x + y = {x + y}")
+say("x % y = {x % y}")
+let bigger = x > y ? "x is bigger" : "y is bigger"
+say(bigger)
+
+# 4. Functions with default params
+fn greet(who, greeting = "Hello") {
+  give "{greeting}, {who}!"
+}
+say(greet("Alice"))
+say(greet("Bob", "Hi"))
+
+# 5. Recursion — fibonacci
+fn fib(n) {
+  when n <= 1 { give n }
+  give fib(n - 1) + fib(n - 2)
+}
+say("fib(10) = {fib(10)}")
+
+# 6. when / otherwise
+fn classify(n) {
+  when n < 0 { give "negative" }
+  otherwise when n == 0 { give "zero" }
+  otherwise { give "positive" }
+}
+say(classify(-5))
+say(classify(0))
+say(classify(7))
+
+# 7. loop + stop
+let count = 0
+loop {
+  count = count + 1
+  when count >= 5 { stop }
+}
+say("loop stopped at count = {count}")
+
+# 8. repeat N as i
+let total = 0
+repeat 5 as i {
+  total = total + i
+}
+say("sum 0..4 = {total}")
+
+# 9. each in array
+let fruits = ["apple", "banana", "cherry"]
+each fruit in fruits {
+  say("  fruit: {fruit}")
+}
+
+# 10. Arrays & builtins
+let nums = [3, 1, 4, 1, 5, 9, 2, 6]
+say("size = {size(nums)}")
+say("max  = {max(nums)}")
+say("min  = {min(nums)}")
+say("sorted = {text(sort(nums))}")
+say("reversed = {text(reverse(nums))}")
+
+# 11. map / filter / reduce
+let doubled = map(nums, fn(n) { give n * 2 })
+say("doubled = {text(doubled)}")
+let evens = filter(nums, fn(n) { give n % 2 == 0 })
+say("evens = {text(evens)}")
+let sumAll = reduce(nums, fn(acc, n) { give acc + n }, 0)
+say("sum = {sumAll}")
+
+# 12. Objects
+let person = { name: "Alice", age: 30, active: true }
+say("name = {person.name}, age = {person.age}")
+person.age = 31
+say("updated age = {person.age}")
+say("keys = {text(keys(person))}")
+
+# 13. Closures
+fn makeCounter(start = 0) {
+  let c = start
+  give fn() {
+    c = c + 1
+    give c
+  }
+}
+let counter = makeCounter(10)
+say(counter())
+say(counter())
+say(counter())
+
+# 14. try / catch / throw
+fn safeDivide(a, b) {
+  when b == 0 { throw "Division by zero!" }
+  give a / b
+}
+try {
+  say(safeDivide(10, 2))
+  say(safeDivide(5, 0))
+} catch (err) {
+  say("Caught: {err}")
+}
+
+# 15. match / case
+let day = 3
+match day {
+  case 1 { say("Monday") }
+  case 2 { say("Tuesday") }
+  case 3 { say("Wednesday") }
+  case 4 { say("Thursday") }
+  case 5 { say("Friday") }
+}
+
+# 16. String methods
+let s = "  Hello, Snake!  "
+say(s.trim())
+say(s.trim().upper())
+say(s.trim().lower())
+let parts = "a,b,c,d".split(",")
+say(text(parts))
+say(join(parts, " | "))
+
+# 17. Math builtins
+say("sqrt(144) = {sqrt(144)}")
+say("floor(3.7) = {floor(3.7)}")
+say("ceil(3.2) = {ceil(3.2)}")
+say("abs(-42) = {abs(-42)}")
+
+# 18. type()
+say(type(42))
+say(type("hi"))
+say(type([1,2]))
+say(type({a:1}))
+say(type(null))
+say(type(true))
+
+# 19. Higher-order functions
+fn apply(func, val) { give func(val) }
+say(apply(fn(n){ give n * n }, 7))
+
+# 20. skip in each
+each n in [1,2,3,4,5,6] {
+  when n % 2 == 0 { skip }
+  say("odd: {n}")
+}
+
+say("--- Demo complete! ---")
+`;
+
+const EXAMPLES_SNK = `# Snake Lang — Extra Examples
+
+# Nested objects
+let config = {
+  server: { host: "localhost", port: 8080 },
+  debug: true
+}
+say("host: {config.server.host}:{config.server.port}")
+
+# Array of objects
+let users = [
+  { name: "Alice", score: 95 },
+  { name: "Bob",   score: 82 },
+  { name: "Carol", score: 91 }
+]
+let topUsers = filter(users, fn(u){ give u.score >= 90 })
+each u in topUsers {
+  say("{u.name}: {u.score}")
+}
+
+# Recursive sum
+fn sumList(arr, i) {
+  when i >= size(arr) { give 0 }
+  give arr[i] + sumList(arr, i + 1)
+}
+say("recursive sum = {sumList([1,2,3,4,5], 0)}")
+
+# String interpolation in loop
+repeat 3 as i {
+  say("iteration {i}: {i * i}")
+}
+
+# Nested functions
+fn outer(x) {
+  fn inner(y) { give x + y }
+  give inner(10)
+}
+say(outer(5))
+`;
+
+const vfs = new Map([
+  ['main.snk', MAIN_SNK],
+  ['examples.snk', EXAMPLES_SNK]
+]);
+let activeFile = 'main.snk';
+let openTabs = ['main.snk'];
+</script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  SYNTAX HIGHLIGHT
+// ═══════════════════════════════════════════════════════
+const KW_LIST = ['let','const','fn','give','when','otherwise','loop','repeat',
+  'as','each','in','try','catch','throw','stop','skip','match','case',
+  'true','false','null','and','or','not'];
+const BI_LIST = ['say','ask','size','num','text','floor','ceil','abs','rand',
+  'sqrt','max','min','type','upper','lower','trim','split','join','push','pop',
+  'has','keys','now','sort','reverse','map','filter','reduce','tlog'];
+const CONST_LIST = ['PI','E','INF'];
+
+function highlight(code){
+  // escape HTML first
+  let s = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // comments
+  s = s.replace(/(#[^\n]*)/g,'<span class="hl-cmt">$1</span>');
+  // strings (simple, no nesting)
+  s = s.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span class="hl-str">$1</span>');
+  // numbers
+  s = s.replace(/\b(\d+\.?\d*)\b/g,'<span class="hl-num">$1</span>');
+  // constants
+  s = s.replace(/\b(PI|E|INF)\b/g,'<span class="hl-const">$1</span>');
+  // keywords
+  const kwRe = new RegExp('\\b('+KW_LIST.join('|')+')\\b','g');
+  s = s.replace(kwRe,'<span class="hl-kw">$1</span>');
+  // builtins
+  const biRe = new RegExp('\\b('+BI_LIST.join('|')+')\\b(?=\\s*\\()','g');
+  s = s.replace(biRe,'<span class="hl-bi">$1</span>');
+  // function names (ident before '(')
+  s = s.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\s*\()/g,(m,n)=>{
+    if(KW_LIST.includes(n)||BI_LIST.includes(n))return m;
+    return '<span class="hl-fn">'+n+'</span>';
+  });
+  return s;
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  EDITOR UI
+// ═══════════════════════════════════════════════════════
+const editor = document.getElementById('editor');
+const hlLayer = document.getElementById('highlight-layer');
+const lineNums = document.getElementById('line-numbers');
+const acBox = document.getElementById('autocomplete');
+let acItems=[], acIdx=-1;
+
+function updateEditor(){
+  const code = editor.value;
+  hlLayer.innerHTML = highlight(code) + '\n';
+  // line numbers
+  const lines = code.split('\n');
+  lineNums.innerHTML = lines.map((_,i)=>`<div>${i+1}</div>`).join('');
+  lineNums.scrollTop = editor.scrollTop;
+  updateOutline();
+  if(activeFile) vfs.set(activeFile, code);
+}
+
+function syncScroll(){
+  lineNums.scrollTop = editor.scrollTop;
+}
+
+editor.addEventListener('input', updateEditor);
+editor.addEventListener('scroll', ()=>{
+  hlLayer.scrollTop = editor.scrollTop;
+  hlLayer.scrollLeft = editor.scrollLeft;
+  lineNums.scrollTop = editor.scrollTop;
+});
+
+editor.addEventListener('keydown', e=>{
+  // Tab
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const s=editor.selectionStart, en=editor.selectionEnd;
+    if(s===en){
+      editor.value=editor.value.slice(0,s)+'  '+editor.value.slice(en);
+      editor.selectionStart=editor.selectionEnd=s+2;
+    } else {
+      const lines=editor.value.split('\n');
+      let pos=0, startLine=-1, endLine=-1;
+      for(let i=0;i<lines.length;i++){
+        if(pos<=s&&s<=pos+lines[i].length)startLine=i;
+        if(pos<=en&&en<=pos+lines[i].length)endLine=i;
+        pos+=lines[i].length+1;
+      }
+      for(let i=startLine;i<=endLine;i++)lines[i]='  '+lines[i];
+      editor.value=lines.join('\n');
+    }
+    updateEditor();return;
+  }
+  // Ctrl+Enter run
+  if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();runCode();return;}
+  // Ctrl+S save
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveFile();return;}
+  // Ctrl+/ comment
+  if(e.ctrlKey&&e.key==='/'){e.preventDefault();toggleComment();return;}
+  // Ctrl+F find
+  if(e.ctrlKey&&e.key==='f'){e.preventDefault();openFindBar();return;}
+  // Ctrl+Space autocomplete
+  if(e.ctrlKey&&e.key===' '){e.preventDefault();showAutocomplete();return;}
+  // autocomplete navigation
+  if(acBox.style.display==='block'){
+    if(e.key==='ArrowDown'){e.preventDefault();acNav(1);return;}
+    if(e.key==='ArrowUp'){e.preventDefault();acNav(-1);return;}
+    if(e.key==='Enter'||e.key==='Tab'){
+      if(acIdx>=0){e.preventDefault();applyAC(acItems[acIdx]);return;}
+    }
+    if(e.key==='Escape'){hideAC();return;}
+  }
+});
+
+function toggleComment(){
+  const s=editor.selectionStart;
+  const lines=editor.value.split('\n');
+  let pos=0, ln=0;
+  for(let i=0;i<lines.length;i++){
+    if(pos+lines[i].length>=s){ln=i;break;}
+    pos+=lines[i].length+1;
+  }
+  if(lines[ln].trimStart().startsWith('#')){
+    lines[ln]=lines[ln].replace(/^(\s*)#\s?/,'$1');
+  } else {
+    lines[ln]='# '+lines[ln];
+  }
+  editor.value=lines.join('\n');
+  updateEditor();
+}
+
+function saveFile(){
+  if(activeFile) vfs.set(activeFile, editor.value);
+  tprint('<span style="color:var(--accent2)">Saved: '+activeFile+'</span>');
+}
+
+// ── Autocomplete ───────────────────────────────────────
+const AC_WORDS = [
+  ...KW_LIST.map(w=>({w,t:'keyword'})),
+  ...BI_LIST.map(w=>({w,t:'builtin'})),
+  ...CONST_LIST.map(w=>({w,t:'const'}))
+];
+
+function showAutocomplete(){
+  const s=editor.selectionStart;
+  const before=editor.value.slice(0,s);
+  const m=before.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
+  const prefix=m?m[0]:'';
+  const matches=AC_WORDS.filter(a=>a.w.startsWith(prefix)&&a.w!==prefix);
+  if(!matches.length){hideAC();return;}
+  acItems=matches;acIdx=0;
+  acBox.innerHTML=matches.map((a,i)=>
+    `<div class="ac-item${i===0?' selected':''}" onclick="applyAC(acItems[${i}])">${a.w}<span class="ac-type">${a.t}</span></div>`
+  ).join('');
+  // position
+  const coords=getCaretCoords();
+  acBox.style.left=coords.x+'px';
+  acBox.style.top=coords.y+'px';
+  acBox.style.display='block';
+}
+
+function getCaretCoords(){
+  const rect=editor.getBoundingClientRect();
+  const s=editor.selectionStart;
+  const lines=editor.value.slice(0,s).split('\n');
+  const row=lines.length;
+  const col=lines[lines.length-1].length;
+  const lh=21, pad=8, cw=8.4;
+  return{
+    x:rect.left+pad+col*cw-editor.scrollLeft+48,
+    y:rect.top+pad+row*lh-editor.scrollTop
+  };
+}
+
+function acNav(d){
+  acIdx=Math.max(0,Math.min(acItems.length-1,acIdx+d));
+  acBox.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('selected',i===acIdx));
+  acBox.querySelectorAll('.ac-item')[acIdx]?.scrollIntoView({block:'nearest'});
+}
+
+function applyAC(item){
+  const s=editor.selectionStart;
+  const before=editor.value.slice(0,s);
+  const m=before.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
+  const prefix=m?m[0]:'';
+  const start=s-prefix.length;
+  editor.value=editor.value.slice(0,start)+item.w+editor.value.slice(s);
+  editor.selectionStart=editor.selectionEnd=start+item.w.length;
+  hideAC();updateEditor();
+}
+
+function hideAC(){acBox.style.display='none';acIdx=-1;}
+document.addEventListener('click',e=>{if(!acBox.contains(e.target))hideAC();});
+</script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  FILE EXPLORER, TABS, OUTLINE
+// ═══════════════════════════════════════════════════════
+function renderFileList(){
+  const fl=document.getElementById('file-list');
+  fl.innerHTML='';
+  for(const [name] of vfs){
+    const div=document.createElement('div');
+    div.className='file-item'+(name===activeFile?' active':'');
+    div.innerHTML=`<span class="fi-name" title="${name}">📄 ${name}</span>
+      <button class="fi-del" onclick="deleteFile('${name}')" title="Delete">✕</button>`;
+    div.querySelector('.fi-name').addEventListener('click',()=>openFile(name));
+    div.addEventListener('dblclick',()=>renameFile(name));
+    fl.appendChild(div);
+  }
+}
+
+function renderTabs(){
+  const tabs=document.getElementById('tabs');
+  tabs.innerHTML='';
+  for(const name of openTabs){
+    const div=document.createElement('div');
+    div.className='tab'+(name===activeFile?' active':'');
+    div.innerHTML=`${name}<button class="tab-close" onclick="closeTab('${name}')">✕</button>`;
+    div.addEventListener('click',e=>{if(!e.target.classList.contains('tab-close'))openFile(name);});
+    tabs.appendChild(div);
+  }
+}
+
+function openFile(name){
+  if(!vfs.has(name))return;
+  activeFile=name;
+  if(!openTabs.includes(name))openTabs.push(name);
+  editor.value=vfs.get(name);
+  updateEditor();
+  renderFileList();
+  renderTabs();
+}
+
+function closeTab(name){
+  openTabs=openTabs.filter(t=>t!==name);
+  if(activeFile===name){
+    activeFile=openTabs[openTabs.length-1]||null;
+    if(activeFile)editor.value=vfs.get(activeFile)||'';
+    else editor.value='';
+    updateEditor();
+  }
+  renderTabs();renderFileList();
+}
+
+function newFile(){
+  const name=prompt('File name (e.g. test.snk):');
+  if(!name||!name.trim())return;
+  const n=name.trim();
+  vfs.set(n,'# '+n+'\n');
+  openFile(n);
+}
+
+function deleteFile(name){
+  if(!confirm('Delete '+name+'?'))return;
+  vfs.delete(name);
+  openTabs=openTabs.filter(t=>t!==name);
+  if(activeFile===name){
+    activeFile=openTabs[0]||null;
+    editor.value=activeFile?vfs.get(activeFile)||'':'';
+    updateEditor();
+  }
+  renderFileList();renderTabs();
+}
+
+function renameFile(name){
+  const newName=prompt('Rename to:',name);
+  if(!newName||newName===name)return;
+  const content=vfs.get(name);
+  vfs.delete(name);
+  vfs.set(newName,content);
+  openTabs=openTabs.map(t=>t===name?newName:t);
+  if(activeFile===name)activeFile=newName;
+  renderFileList();renderTabs();
+}
+
+// ── Outline ────────────────────────────────────────────
+function updateOutline(){
+  const code=editor.value;
+  const lines=code.split('\n');
+  const items=[];
+  lines.forEach((line,i)=>{
+    const fnM=line.match(/^\s*fn\s+(\w+)/);
+    if(fnM)items.push({name:fnM[1],line:i+1,kind:'fn'});
+    const letM=line.match(/^\s*(let|const)\s+(\w+)/);
+    if(letM)items.push({name:letM[2],line:i+1,kind:'let'});
+  });
+  const ol=document.getElementById('outline-list');
+  ol.innerHTML=items.map(it=>
+    `<div class="outline-item ol-${it.kind}" onclick="gotoLine(${it.line})">${it.kind==='fn'?'⚡':'◆'} ${it.name} <span style="color:var(--fg2);font-size:10px">:${it.line}</span></div>`
+  ).join('');
+}
+
+function gotoLine(n){
+  const lines=editor.value.split('\n');
+  let pos=0;
+  for(let i=0;i<n-1&&i<lines.length;i++)pos+=lines[i].length+1;
+  editor.focus();
+  editor.selectionStart=editor.selectionEnd=pos;
+  const lh=21;
+  editor.scrollTop=(n-3)*lh;
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  TERMINAL
+// ═══════════════════════════════════════════════════════
+const terminal = document.getElementById('terminal');
+let termHistory=[], termHistIdx=-1;
+
+function tprint(html){
+  const div=document.createElement('div');
+  div.innerHTML=html;
+  terminal.appendChild(div);
+  terminal.scrollTop=terminal.scrollHeight;
+}
+
+function clearTerminal(){terminal.innerHTML='';}
+
+function termKey(e){
+  const inp=document.getElementById('terminal-input');
+  if(e.key==='Enter'){
+    const cmd=inp.value.trim();
+    if(!cmd)return;
+    termHistory.unshift(cmd);termHistIdx=-1;
+    tprint('<span style="color:var(--accent2)">snake&gt;</span> '+escHtml(cmd));
+    inp.value='';
+    execTermCmd(cmd);
+  }
+  if(e.key==='ArrowUp'){
+    termHistIdx=Math.min(termHistIdx+1,termHistory.length-1);
+    inp.value=termHistory[termHistIdx]||'';
+  }
+  if(e.key==='ArrowDown'){
+    termHistIdx=Math.max(termHistIdx-1,-1);
+    inp.value=termHistIdx>=0?termHistory[termHistIdx]:'';
+  }
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function execTermCmd(cmd){
+  const parts=cmd.split(' ');
+  const c=parts[0];
+  switch(c){
+    case 'help':
+      tprint(`<span style="color:var(--accent2)">Commands:</span>
+  <span style="color:var(--yellow)">run</span>          — run current file
+  <span style="color:var(--yellow)">run &lt;file&gt;</span>   — run specific file
+  <span style="color:var(--yellow)">clear</span>        — clear terminal
+  <span style="color:var(--yellow)">ls</span>           — list files
+  <span style="color:var(--yellow)">cat &lt;file&gt;</span>   — show file content
+  <span style="color:var(--yellow)">new &lt;file&gt;</span>   — create new file
+  <span style="color:var(--yellow)">rm &lt;file&gt;</span>    — delete file
+  <span style="color:var(--yellow)">save</span>         — save current file
+  <span style="color:var(--yellow)">date</span>         — show current date/time
+  <span style="color:var(--yellow)">echo &lt;text&gt;</span> — print text
+  <span style="color:var(--yellow)">version</span>      — show Snake version`);
+      break;
+    case 'run':{
+      const fname=parts[1]||activeFile;
+      if(!fname){tprint('<span style="color:var(--red)">No file open</span>');break;}
+      if(!vfs.has(fname)){tprint('<span style="color:var(--red)">File not found: '+escHtml(fname)+'</span>');break;}
+      runFile(fname);break;
+    }
+    case 'clear':clearTerminal();break;
+    case 'ls':
+      tprint([...vfs.keys()].map(n=>`  <span style="color:var(--accent2)">📄 ${n}</span>`).join('<br>'));break;
+    case 'cat':{
+      const fn=parts[1];
+      if(!fn||!vfs.has(fn)){tprint('<span style="color:var(--red)">File not found</span>');break;}
+      tprint('<pre style="color:var(--fg);margin:0">'+escHtml(vfs.get(fn))+'</pre>');break;
+    }
+    case 'new':{
+      const fn=parts[1];
+      if(!fn){tprint('<span style="color:var(--red)">Usage: new &lt;filename&gt;</span>');break;}
+      vfs.set(fn,'# '+fn+'\n');
+      renderFileList();
+      tprint('<span style="color:var(--accent2)">Created: '+escHtml(fn)+'</span>');break;
+    }
+    case 'rm':{
+      const fn=parts[1];
+      if(!fn||!vfs.has(fn)){tprint('<span style="color:var(--red)">File not found</span>');break;}
+      vfs.delete(fn);
+      openTabs=openTabs.filter(t=>t!==fn);
+      if(activeFile===fn){activeFile=openTabs[0]||null;editor.value=activeFile?vfs.get(activeFile)||'':'';}
+      renderFileList();renderTabs();
+      tprint('<span style="color:var(--accent2)">Deleted: '+escHtml(fn)+'</span>');break;
+    }
+    case 'save':
+      if(activeFile)vfs.set(activeFile,editor.value);
+      tprint('<span style="color:var(--accent2)">Saved: '+(activeFile||'none')+'</span>');break;
+    case 'date':tprint('<span style="color:var(--fg)">'+new Date().toString()+'</span>');break;
+    case 'echo':tprint('<span style="color:var(--fg)">'+escHtml(parts.slice(1).join(' '))+'</span>');break;
+    case 'version':tprint('<span style="color:var(--accent2)">Snake Lang v1.0 — Snake IDE v1.0</span>');break;
+    default:tprint('<span style="color:var(--red)">Unknown command: '+escHtml(c)+'. Type <b>help</b> for commands.</span>');
+  }
+}
+</script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  FIND BAR
+// ═══════════════════════════════════════════════════════
+let findMatches=[], findIdx=0, matchCase=false, useRegex=false;
+
+function openFindBar(){
+  const fb=document.getElementById('find-bar');
+  fb.classList.add('visible');
+  document.getElementById('find-input').focus();
+}
+function closeFindBar(){
+  document.getElementById('find-bar').classList.remove('visible');
+  findMatches=[];
+  document.getElementById('find-count').textContent='';
+}
+function toggleCase(){
+  matchCase=!matchCase;
+  document.getElementById('btn-case').classList.toggle('active',matchCase);
+  doFind();
+}
+function toggleRegex(){
+  useRegex=!useRegex;
+  document.getElementById('btn-regex').classList.toggle('active',useRegex);
+  doFind();
+}
+function doFind(){
+  const q=document.getElementById('find-input').value;
+  findMatches=[];
+  if(!q){document.getElementById('find-count').textContent='';return;}
+  const code=editor.value;
+  try{
+    const flags=matchCase?'g':'gi';
+    const pattern=useRegex?new RegExp(q,flags):new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
+    let m;
+    while((m=pattern.exec(code))!==null)findMatches.push({start:m.index,end:m.index+m[0].length});
+  }catch(e){}
+  document.getElementById('find-count').textContent=findMatches.length?`${Math.min(findIdx+1,findMatches.length)}/${findMatches.length}`:'0 results';
+  if(findMatches.length){
+    findIdx=Math.min(findIdx,findMatches.length-1);
+    selectMatch(findIdx);
+  }
+}
+function findNext(){
+  if(!findMatches.length)return;
+  findIdx=(findIdx+1)%findMatches.length;
+  selectMatch(findIdx);
+}
+function findPrev(){
+  if(!findMatches.length)return;
+  findIdx=(findIdx-1+findMatches.length)%findMatches.length;
+  selectMatch(findIdx);
+}
+function selectMatch(i){
+  const m=findMatches[i];
+  if(!m)return;
+  editor.focus();
+  editor.selectionStart=m.start;
+  editor.selectionEnd=m.end;
+  document.getElementById('find-count').textContent=`${i+1}/${findMatches.length}`;
+  // scroll into view
+  const lines=editor.value.slice(0,m.start).split('\n');
+  editor.scrollTop=(lines.length-3)*21;
+}
+function replaceOne(){
+  if(!findMatches.length)return;
+  const rep=document.getElementById('replace-input').value;
+  const m=findMatches[findIdx];
+  if(!m)return;
+  editor.value=editor.value.slice(0,m.start)+rep+editor.value.slice(m.end);
+  updateEditor();doFind();
+}
+function replaceAll(){
+  const q=document.getElementById('find-input').value;
+  const rep=document.getElementById('replace-input').value;
+  if(!q)return;
+  try{
+    const flags=matchCase?'g':'gi';
+    const pattern=useRegex?new RegExp(q,flags):new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
+    editor.value=editor.value.replace(pattern,rep);
+    updateEditor();doFind();
+  }catch(e){}
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeFindBar();
+});
+</script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  RUN ENGINE + INIT
+// ═══════════════════════════════════════════════════════
+function runCode(){
+  if(activeFile)vfs.set(activeFile,editor.value);
+  runFile(activeFile);
+}
+
+function runFile(fname){
+  const src=vfs.get(fname)||'';
+  tprint('<span style="color:var(--fg2)">─── Running '+fname+' ───</span>');
+  const lines=[];
+  const interp=new Interpreter(msg=>{
+    tprint('<span style="color:var(--fg)">'+escHtml(String(msg))+'</span>');
+  });
+  try{
+    interp.run(src);
+    tprint('<span style="color:var(--accent2)">✓ Done</span>');
+  } catch(e){
+    if(e instanceof ThrowSignal){
+      tprint('<span style="color:var(--red)">Uncaught throw: '+escHtml(String(e.val))+'</span>');
+    } else {
+      const loc=e.snakeLine?` (line ${e.snakeLine})`:'';
+      tprint('<span style="color:var(--red)">Error'+loc+': '+escHtml(e.message)+'</span>');
+    }
+  }
+}
+
+// ── Init ───────────────────────────────────────────────
+(function init(){
+  renderFileList();
+  openFile('main.snk');
+  tprint('<span style="color:var(--accent2)">🐍 Snake IDE v1.0 ready. Type <b>help</b> for commands.</span>');
+  tprint('<span style="color:var(--fg2)">Press <b>Ctrl+Enter</b> to run, <b>Ctrl+Space</b> for autocomplete, <b>Ctrl+F</b> to find.</span>');
+})();
+</script>
 </html>
