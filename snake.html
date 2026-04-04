@@ -1,1636 +1,921 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Snake IDE</title>
+<html lang="vi"><head><meta charset="UTF-8"><title>Snake IDE</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-pre,code,textarea,#highlight-layer{
-  font-family:'Consolas','Courier New',monospace!important;
-  font-size:14px!important;
-  line-height:21px!important;
-  tab-size:2!important;
-}
-:root{
-  --bg:#1e1e1e;--bg2:#252526;--bg3:#2d2d30;--bg4:#3c3c3c;
-  --fg:#d4d4d4;--fg2:#858585;--accent:#569cd6;--accent2:#4ec9b0;
-  --green:#6a9955;--yellow:#dcdcaa;--orange:#ce9178;--purple:#c586c0;
-  --red:#f44747;--border:#3c3c3c;--tab:#2d2d30;--tabact:#1e1e1e;
-}
-body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',sans-serif;
-  display:flex;flex-direction:column;height:100vh;overflow:hidden}
-
+:root{--bg:#1e1e1e;--bg2:#252526;--bg3:#2d2d30;--bg4:#3c3c3c;
+  --fg:#d4d4d4;--fg2:#858585;--act:#0078d4;--green:#6a9955;
+  --yellow:#dcdcaa;--orange:#ce9178;--purple:#c586c0;--red:#f44747;
+  --font:'Consolas','Courier New',monospace;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--fg);
+  font-family:'Segoe UI',sans-serif;font-size:13px;}
+body{display:flex;flex-direction:column;}
 /* HEADER */
-#header{display:flex;align-items:center;gap:12px;padding:0 16px;
-  height:40px;background:#323233;border-bottom:1px solid var(--border);
-  flex-shrink:0;z-index:10}
-#logo{font-size:18px;font-weight:700;color:var(--accent2);letter-spacing:1px}
-#logo span{color:var(--accent)}
-#btn-run{background:var(--accent2);color:#000;border:none;padding:4px 14px;
-  border-radius:4px;cursor:pointer;font-weight:600;font-size:13px}
-#btn-run:hover{background:#3daa8f}
-.hdr-spacer{flex:1}
-#status-bar{font-size:11px;color:var(--fg2)}
-
-/* MAIN LAYOUT */
-#main{display:flex;flex:1;overflow:hidden}
-
+#hdr{height:38px;background:#323233;display:flex;align-items:center;
+  gap:8px;padding:0 12px;flex-shrink:0;border-bottom:1px solid #252526;}
+.logo{font-size:14px;font-weight:600;color:#4ec9b0;margin-right:4px;}
+.btn{border:none;padding:4px 12px;cursor:pointer;border-radius:3px;
+  font-size:12px;font-family:inherit;}
+.btn-run{background:#0078d4;color:#fff;}.btn-run:hover{background:#106ebe;}
+.btn-sm{background:none;color:#858585;border:1px solid #444;font-size:12px;}
+.btn-sm:hover{color:#ccc;border-color:#888;}
+#hdr-right{margin-left:auto;font-size:11px;color:#444;}
+/* LAYOUT */
+#body{display:flex;flex:1;overflow:hidden;}
 /* SIDEBAR */
-#sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;flex-shrink:0;overflow:hidden}
-#sidebar-header{padding:8px 12px;font-size:11px;font-weight:600;
-  color:var(--fg2);text-transform:uppercase;letter-spacing:1px;
-  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
-#sidebar-header button{background:none;border:none;color:var(--fg2);
-  cursor:pointer;font-size:14px;padding:0 2px}
-#sidebar-header button:hover{color:var(--fg)}
-#file-list{flex:1;overflow-y:auto;padding:4px 0}
-.file-item{display:flex;align-items:center;padding:3px 12px;cursor:pointer;
-  font-size:13px;gap:6px;user-select:none}
-.file-item:hover{background:var(--bg3)}
-.file-item.active{background:var(--bg4);color:#fff}
-.file-item .fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.file-item .fi-del{opacity:0;font-size:11px;color:var(--fg2);background:none;
-  border:none;cursor:pointer;padding:0 2px}
-.file-item:hover .fi-del{opacity:1}
-.file-item .fi-del:hover{color:var(--red)}
-
-/* OUTLINE */
-#outline-header{padding:6px 12px;font-size:11px;font-weight:600;
-  color:var(--fg2);text-transform:uppercase;letter-spacing:1px;
-  border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-#outline-list{max-height:160px;overflow-y:auto;padding:4px 0}
-.outline-item{padding:2px 16px;font-size:12px;cursor:pointer;color:var(--yellow)}
-.outline-item:hover{background:var(--bg3)}
-.outline-item.ol-let{color:var(--accent)}
-
+#sidebar{width:200px;background:var(--bg2);border-right:1px solid #333;
+  display:flex;flex-direction:column;flex-shrink:0;}
+.sb-title{padding:6px 12px;font-size:10px;font-weight:700;color:#858585;
+  text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #333;
+  display:flex;align-items:center;justify-content:space-between;}
+.sb-title button{background:none;border:none;color:#555;cursor:pointer;
+  font-size:14px;padding:0 3px;}.sb-title button:hover{color:#ccc;}
+#file-list{flex:1;overflow-y:auto;padding:4px 0;}
+.fi{display:flex;align-items:center;padding:3px 8px 3px 14px;font-size:12px;
+  cursor:pointer;color:#ccc;gap:5px;white-space:nowrap;overflow:hidden;}
+.fi:hover{background:#2a2d2e;}.fi.active{background:#37373d;color:#fff;}
+.fi-name{flex:1;overflow:hidden;text-overflow:ellipsis;}
+.fi-x{background:none;border:none;color:#444;cursor:pointer;font-size:12px;
+  padding:0 2px;opacity:0;}.fi:hover .fi-x{opacity:1;}.fi-x:hover{color:#f44747;}
+.fi-dot{width:6px;height:6px;border-radius:50%;background:#e2c08d;
+  flex-shrink:0;display:none;}.fi.modified .fi-dot{display:block;}
+#outline-title{padding:5px 12px;font-size:10px;font-weight:700;color:#858585;
+  text-transform:uppercase;letter-spacing:1px;border-top:1px solid #333;
+  border-bottom:1px solid #333;}
+#outline{max-height:140px;overflow-y:auto;}
+.ol-item{padding:2px 8px 2px 16px;font-size:11px;cursor:pointer;
+  display:flex;align-items:center;gap:5px;}
+.ol-item:hover{background:#2a2d2e;}
+.ol-fn{color:#dcdcaa;}.ol-var{color:#9cdcfe;}
 /* EDITOR AREA */
-#editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
-#tabs{display:flex;background:var(--bg3);border-bottom:1px solid var(--border);
-  flex-shrink:0;overflow-x:auto}
-.tab{padding:6px 16px;font-size:13px;cursor:pointer;border-right:1px solid var(--border);
-  white-space:nowrap;color:var(--fg2);display:flex;align-items:center;gap:6px}
-.tab.active{background:var(--tabact);color:var(--fg);border-top:2px solid var(--accent)}
-.tab:hover:not(.active){background:var(--bg4)}
-.tab .tab-close{opacity:0;font-size:11px;background:none;border:none;
-  color:var(--fg2);cursor:pointer;padding:0 2px}
-.tab:hover .tab-close,.tab.active .tab-close{opacity:1}
-.tab .tab-close:hover{color:var(--red)}
-
-/* EDITOR WRAPPER */
-#editor-wrap{flex:1;display:flex;overflow:hidden;position:relative}
-#line-numbers{width:48px;background:var(--bg2);color:var(--fg2);
-  font-family:'Consolas','Courier New',monospace;font-size:14px;
-  line-height:21px;padding:8px 0;text-align:right;padding-right:8px;
-  overflow:hidden;flex-shrink:0;user-select:none;border-right:1px solid var(--border)}
-#code-container{flex:1;position:relative;overflow:hidden;}
-#highlight-layer{
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  font-family:'Consolas','Courier New',monospace;font-size:14px;
-  line-height:21px;padding:8px;white-space:pre;overflow:hidden;
-  pointer-events:none;z-index:1;}
-#editor{
-  position:absolute;top:0;left:0;right:0;bottom:0;
-  background:transparent;color:transparent;caret-color:#aeafad;
-  font-family:'Consolas','Courier New',monospace;font-size:14px;
-  line-height:21px;padding:8px;border:none;outline:none;resize:none;
-  overflow:auto;white-space:pre;tab-size:2;z-index:2;
-  -webkit-text-fill-color:transparent;}
-
+#editor-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+/* TABS */
+#tabs{height:35px;background:var(--bg3);display:flex;align-items:flex-end;
+  border-bottom:1px solid #333;flex-shrink:0;overflow-x:auto;}
+#tabs::-webkit-scrollbar{height:2px;}
+.tab{display:flex;align-items:center;gap:5px;padding:0 12px;height:35px;
+  font-size:12px;cursor:pointer;color:#858585;border-right:1px solid #333;
+  background:var(--bg3);white-space:nowrap;flex-shrink:0;}
+.tab.active{background:var(--bg);color:#fff;border-top:1px solid var(--act);}
+.tab:hover{color:#ccc;}
+.tab-x{font-size:13px;color:#444;margin-left:3px;padding:0 2px;border-radius:2px;}
+.tab:hover .tab-x,.tab.active .tab-x{color:#858585;}
+.tab-x:hover{color:#fff!important;background:rgba(255,255,255,.1);}
+.tab.modified .tab-x::before{content:'●';font-size:8px;}
+.tab:not(.modified) .tab-x::before{content:'×';}
 /* FIND BAR */
-#find-bar{display:none;background:var(--bg3);border-bottom:1px solid var(--border);
-  padding:6px 10px;gap:6px;align-items:center;flex-wrap:wrap;flex-shrink:0}
-#find-bar.visible{display:flex}
-#find-bar input{background:var(--bg4);border:1px solid var(--border);color:var(--fg);
-  padding:3px 8px;border-radius:3px;font-size:13px;width:180px}
-#find-bar input:focus{outline:none;border-color:var(--accent)}
-#find-bar button{background:var(--bg4);border:1px solid var(--border);color:var(--fg);
-  padding:3px 8px;border-radius:3px;cursor:pointer;font-size:12px}
-#find-bar button:hover{background:var(--bg3);border-color:var(--accent)}
-#find-bar button.active{background:var(--accent);color:#000;border-color:var(--accent)}
-#find-count{font-size:12px;color:var(--fg2)}
-
+#find-bar{display:none;background:var(--bg2);border-bottom:1px solid #333;
+  padding:5px 10px;gap:6px;align-items:center;flex-shrink:0;}
+#find-bar.show{display:flex;}
+#find-bar input{background:#3c3c3c;border:1px solid #555;color:var(--fg);
+  padding:3px 8px;font-size:12px;border-radius:2px;outline:none;
+  font-family:var(--font);width:180px;}
+#find-bar input:focus{border-color:var(--act);}
+.fb-btn{background:none;border:1px solid #444;color:#858585;padding:2px 7px;
+  font-size:11px;border-radius:2px;cursor:pointer;}.fb-btn:hover{color:#ccc;}
+.fb-tog{background:none;border:1px solid transparent;color:#858585;
+  padding:2px 5px;font-size:11px;border-radius:2px;cursor:pointer;}
+.fb-tog:hover,.fb-tog.on{background:#3c3c3c;border-color:#555;color:#ccc;}
+#find-count{font-size:11px;color:#858585;min-width:55px;}
+/* EDITOR */
+#editor-wrap{flex:1;display:flex;overflow:hidden;}
+#lnums{background:var(--bg);color:#4a4a4a;padding:8px 10px 8px 8px;
+  font-size:13px;line-height:20px;text-align:right;user-select:none;
+  overflow:hidden;flex-shrink:0;font-family:var(--font);
+  border-right:1px solid #2a2a2a;min-width:44px;}
+.ln-cur{color:#ccc!important;}
+#code-wrap{flex:1;position:relative;overflow:hidden;}
+#hl{position:absolute;inset:0;padding:8px 8px 8px 12px;font-family:var(--font);
+  font-size:13px;line-height:20px;white-space:pre;overflow:hidden;
+  pointer-events:none;z-index:1;word-break:normal;}
+#editor{position:absolute;inset:0;background:transparent;color:transparent;
+  caret-color:#aeafad;border:none;outline:none;padding:8px 8px 8px 12px;
+  font-family:var(--font);font-size:13px;line-height:20px;resize:none;
+  tab-size:4;white-space:pre;overflow:auto;z-index:2;
+  -webkit-text-fill-color:transparent;}
+/* SYNTAX */
+.k{color:#569cd6;font-weight:500;}.f{color:#dcdcaa;}.s{color:#ce9178;}
+.n{color:#b5cea8;}.c{color:#6a9955;font-style:italic;}.b{color:#4ec9b0;}
+.v{color:#9cdcfe;}
 /* AUTOCOMPLETE */
-#autocomplete{position:absolute;background:var(--bg3);border:1px solid var(--accent);
-  border-radius:4px;z-index:100;max-height:200px;overflow-y:auto;
-  font-family:'Consolas','Courier New',monospace;font-size:13px;min-width:160px;
-  box-shadow:0 4px 16px #0008;display:none}
-.ac-item{padding:4px 12px;cursor:pointer;color:var(--fg)}
-.ac-item:hover,.ac-item.selected{background:var(--accent);color:#000}
-.ac-item .ac-type{font-size:10px;color:var(--fg2);margin-left:6px}
-.ac-item.selected .ac-type{color:#0008}
-
+#ac{display:none;position:absolute;background:#252526;border:1px solid #454545;
+  border-radius:3px;box-shadow:0 4px 16px rgba(0,0,0,.5);z-index:100;
+  max-height:180px;overflow-y:auto;min-width:180px;}
+.ac-i{padding:4px 12px;font-size:12px;font-family:var(--font);cursor:pointer;
+  display:flex;align-items:center;gap:8px;color:var(--fg);}
+.ac-i:hover,.ac-i.sel{background:var(--act);}
+.ac-t{font-size:10px;color:#858585;margin-left:auto;}
+.ac-i.sel .ac-t,.ac-i:hover .ac-t{color:rgba(255,255,255,.6);}
+/* STATUS */
+#statusbar{height:22px;background:var(--act);color:#fff;display:flex;
+  align-items:center;flex-shrink:0;}
+.sbi{padding:0 8px;height:22px;display:flex;align-items:center;gap:4px;
+  cursor:pointer;font-size:11px;white-space:nowrap;}
+.sbi:hover{background:rgba(255,255,255,.15);}
 /* TERMINAL */
-#terminal-wrap{height:200px;display:flex;flex-direction:column;
-  border-top:1px solid var(--border);flex-shrink:0}
-#terminal-header{padding:4px 12px;background:var(--bg3);font-size:11px;
-  font-weight:600;color:var(--fg2);text-transform:uppercase;letter-spacing:1px;
-  display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
-#terminal-header button{background:none;border:none;color:var(--fg2);
-  cursor:pointer;font-size:12px;padding:0 4px}
-#terminal-header button:hover{color:var(--fg)}
-#terminal{flex:1;background:#0d0d0d;font-family:'Consolas','Courier New',monospace;
-  font-size:13px;padding:8px;overflow-y:auto;color:var(--fg)}
-#terminal-input-row{display:flex;background:#0d0d0d;border-top:1px solid var(--border);
-  padding:4px 8px;align-items:center}
-#terminal-prompt{color:var(--accent2);font-family:'Consolas','Courier New',monospace;
-  font-size:13px;margin-right:6px}
-#terminal-input{flex:1;background:transparent;border:none;outline:none;
-  color:var(--fg);font-family:'Consolas','Courier New',monospace;font-size:13px}
+#terminal{height:220px;background:#0c0c0c;border-top:2px solid var(--act);
+  display:flex;flex-direction:column;flex-shrink:0;}
+#term-hdr{background:var(--bg2);height:35px;display:flex;align-items:center;
+  border-bottom:1px solid #333;flex-shrink:0;}
+.ptab{height:35px;display:flex;align-items:center;padding:0 14px;font-size:11px;
+  color:#858585;cursor:pointer;border-bottom:2px solid transparent;
+  text-transform:uppercase;letter-spacing:.5px;}
+.ptab.active{color:#fff;border-bottom-color:var(--act);}.ptab:hover{color:#ccc;}
+.term-acts{margin-left:auto;display:flex;align-items:center;gap:2px;padding-right:8px;}
+.term-acts button{background:none;border:none;color:#555;cursor:pointer;
+  padding:3px 6px;border-radius:3px;font-size:12px;}
+.term-acts button:hover{color:#ccc;}
+.tpanel{display:none;flex:1;overflow-y:auto;padding:4px 12px;font-size:12px;
+  font-family:var(--font);}
+.tpanel.active{display:block;}
+.tl{line-height:1.5;padding:1px 0;word-break:break-all;}
+.ok{color:#4ec9b0;}.err{color:#f44747;}.info{color:#75beff;}
+.warn{color:#dcdcaa;}.cmd{color:#569cd6;font-size:11px;}
+#term-in-row{display:flex;align-items:center;padding:3px 12px 5px;
+  background:#111;gap:6px;border-top:1px solid #222;flex-shrink:0;}
+#term-prompt{color:#569cd6;font-size:12px;font-family:var(--font);white-space:nowrap;}
+#term-in{background:transparent;border:none;outline:none;color:#ccc;flex:1;
+  font-size:12px;font-family:var(--font);}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#424242;}
+::-webkit-scrollbar-thumb:hover{background:#555;}
+</style></head><body>
 
-/* SCROLLBARS */
-::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-track{background:var(--bg2)}
-::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
-::-webkit-scrollbar-thumb:hover{background:#555}
-
-/* HIGHLIGHT COLORS */
-.hl-kw{color:var(--purple)}
-.hl-fn{color:var(--yellow)}
-.hl-bi{color:var(--accent2)}
-.hl-str{color:var(--orange)}
-.hl-num{color:#b5cea8}
-.hl-cmt{color:var(--green);font-style:italic}
-.hl-const{color:#9cdcfe}
-.hl-op{color:var(--accent)}
-</style>
-</head>
-<body>
-<div id="header">
-  <div id="logo"><span>🐍</span> Snake<span>IDE</span></div>
-  <button id="btn-run" onclick="runCode()">▶ Run</button>
-  <div class="hdr-spacer"></div>
-  <span id="status-bar">Snake Lang v1.0</span>
+<div id="hdr">
+  <div class="logo">&#x1F40D; Snake IDE</div>
+  <button class="btn btn-run" onclick="runCode()">&#9654; Run (Ctrl+Enter)</button>
+  <button class="btn btn-sm" onclick="toggleFind()">Find (Ctrl+F)</button>
+  <button class="btn btn-sm" onclick="newFile()">+ New</button>
+  <button class="btn btn-sm" onclick="saveFile()">Save (Ctrl+S)</button>
+  <div id="hdr-right">Ctrl+Space = Autocomplete &nbsp;|&nbsp; Ctrl+/ = Comment</div>
 </div>
-<div id="main">
+<div id="body">
   <div id="sidebar">
-    <div id="sidebar-header">
-      Explorer
-      <button onclick="newFile()" title="New File">+</button>
+    <div class="sb-title">Explorer
+      <div><button onclick="newFile()" title="New">+</button>
+           <button onclick="deleteActiveFile()" title="Delete">&#x1F5D1;</button></div>
     </div>
     <div id="file-list"></div>
-    <div id="outline-header">Outline</div>
-    <div id="outline-list"></div>
+    <div id="outline-title">Outline</div>
+    <div id="outline"></div>
   </div>
   <div id="editor-area">
     <div id="tabs"></div>
-    <div id="find-bar" id="find-bar">
-      <input id="find-input" placeholder="Find..." oninput="doFind()">
-      <input id="replace-input" placeholder="Replace...">
-      <button onclick="findPrev()">◀</button>
-      <button onclick="findNext()">▶</button>
-      <button onclick="replaceOne()">Replace</button>
-      <button onclick="replaceAll()">All</button>
-      <button id="btn-case" onclick="toggleCase()" title="Match Case">Aa</button>
-      <button id="btn-regex" onclick="toggleRegex()" title="Regex">.*</button>
+    <div id="find-bar">
+      <input type="text" id="find-input" placeholder="Find..." oninput="Find.search(this.value)" onkeydown="Find.key(event)" autocomplete="off">
+      <button class="fb-tog" id="fb-case" onclick="Find.toggleCase()" title="Match Case">Aa</button>
+      <button class="fb-tog" id="fb-regex" onclick="Find.toggleRegex()" title="Regex">.*</button>
       <span id="find-count"></span>
-      <button onclick="closeFindBar()" style="margin-left:auto">✕</button>
+      <button class="fb-btn" onclick="Find.prev()">&#8593;</button>
+      <button class="fb-btn" onclick="Find.next()">&#8595;</button>
+      <span style="width:1px;height:16px;background:#444;"></span>
+      <input type="text" id="replace-input" placeholder="Replace..." autocomplete="off"
+        style="background:#3c3c3c;border:1px solid #555;color:#d4d4d4;padding:3px 8px;
+               font-size:12px;border-radius:2px;outline:none;font-family:Consolas,monospace;width:160px;">
+      <button class="fb-btn" onclick="Find.replaceOne()">Replace</button>
+      <button class="fb-btn" onclick="Find.replaceAll()">All</button>
+      <button class="fb-btn" onclick="toggleFind(false)" style="margin-left:auto;">&#x2715;</button>
     </div>
     <div id="editor-wrap">
-      <div id="line-numbers"></div>
-      <div id="code-container">
-        <div id="highlight-layer"></div>
-        <textarea id="editor" spellcheck="false"></textarea>
+      <div id="lnums"></div>
+      <div id="code-wrap">
+        <div id="hl"></div>
+        <textarea id="editor" spellcheck="false" autocomplete="off"
+          autocorrect="off" autocapitalize="off"></textarea>
       </div>
-      <div id="autocomplete"></div>
+      <div id="ac"></div>
+    </div>
+    <div id="statusbar">
+      <div class="sbi">&#x1F40D; Snake Project</div>
+      <div class="sbi" id="sb-pos">Ln 1, Col 1</div>
+      <div class="sbi" id="sb-sel" style="display:none;"></div>
+      <div class="sbi" style="margin-left:auto;">Spaces: 4</div>
+      <div class="sbi">UTF-8</div>
+      <div class="sbi">Snake Lang</div>
+      <div class="sbi" id="sb-status">Ready</div>
+      <div class="sbi" onclick="runCode()" style="background:rgba(255,255,255,.12);">&#9654; Run</div>
     </div>
   </div>
 </div>
-<div id="terminal-wrap">
-  <div id="terminal-header">
-    Terminal
-    <button onclick="clearTerminal()">Clear</button>
+<div id="terminal">
+  <div id="term-hdr">
+    <div class="ptab active" onclick="switchPanel('terminal')">Terminal</div>
+    <div class="ptab" onclick="switchPanel('output')">Output</div>
+    <div class="term-acts">
+      <button onclick="clearPanel()">&#x1F5D1;</button>
+      <button onclick="document.getElementById('terminal').style.display='none'">&#x2715;</button>
+    </div>
   </div>
-  <div id="terminal"></div>
-  <div id="terminal-input-row">
-    <span id="terminal-prompt">snake&gt;</span>
-    <input id="terminal-input" placeholder="Type command..." onkeydown="termKey(event)">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="tpanel active" id="panel-terminal">
+      <div class="tl info">Snake IDE &#8212; type 'help' for commands, Ctrl+Enter to run</div>
+    </div>
+    <div class="tpanel" id="panel-output"></div>
+  </div>
+  <div id="term-in-row">
+    <span id="term-prompt">snake:~$</span>
+    <input type="text" id="term-in" spellcheck="false" autocomplete="off" placeholder="type a command...">
   </div>
 </div>
-</body>
 <script>
-// ═══════════════════════════════════════════════════════
-//  SNAKE LANG ENGINE
-// ═══════════════════════════════════════════════════════
-
-// ── Tokenizer ──────────────────────────────────────────
-const TT = {
-  NUM:'NUM',STR:'STR',IDENT:'IDENT',KW:'KW',OP:'OP',
-  LPAREN:'LPAREN',RPAREN:'RPAREN',LBRACE:'LBRACE',RBRACE:'RBRACE',
-  LBRACKET:'LBRACKET',RBRACKET:'RBRACKET',COMMA:'COMMA',
-  COLON:'COLON',DOT:'DOT',SEMI:'SEMI',NEWLINE:'NEWLINE',EOF:'EOF',
-  ARROW:'ARROW',QUESTION:'QUESTION'
-};
-
-const KEYWORDS = new Set([
-  'let','const','fn','give','when','otherwise','loop','repeat','as',
-  'each','in','try','catch','throw','stop','skip','match','case',
-  'true','false','null','and','or','not'
-]);
-
-class SnakeError extends Error {
-  constructor(msg, line=0, col=0){
-    super(msg); this.snakeLine=line; this.snakeCol=col;
-  }
+// ── Env ──────────────────────────────────────────────────────
+class Env{
+  constructor(p){this.v=new Map();this.p=p;}
+  get(n){if(this.v.has(n))return this.v.get(n);if(this.p)return this.p.get(n);throw new Error("Undefined '"+n+"'");}
+  set(n,v){this.v.set(n,v);}
+  assign(n,v){if(this.v.has(n)){this.v.set(n,v);return;}if(this.p){this.p.assign(n,v);return;}throw new Error("Undeclared '"+n+"' — use let");}
+  has(n){return this.v.has(n)||(this.p?this.p.has(n):false);}
 }
-
+// ── Tokenizer ─────────────────────────────────────────────────
 function tokenize(src){
-  const tokens=[];
-  let i=0, line=1, col=1;
-  const peek=(n=0)=>src[i+n];
-  const adv=()=>{const c=src[i++];if(c==='\n'){line++;col=1;}else col++;return c;};
+  const t=[],push=(a,b,l,c)=>t.push({t:a,v:b,line:l,col:c});
+  let i=0,line=1,col=1;
   while(i<src.length){
-    const c=peek();
-    // skip whitespace (not newline)
-    if(c===' '||c==='\t'||c==='\r'){adv();continue;}
-    // newline
-    if(c==='\n'){adv();tokens.push({t:TT.NEWLINE,v:'\n',line,col});continue;}
-    // comment
-    if(c==='#'){while(i<src.length&&peek()!=='\n')adv();continue;}
-    // string
+    const c=src[i];
+    if(c==='\n'){line++;col=1;i++;continue;}
+    if(c===' '||c==='\t'||c==='\r'){col++;i++;continue;}
+    if(c==='#'){while(i<src.length&&src[i]!=='\n')i++;continue;}
     if(c==='"'||c==="'"){
-      const q=adv();let s='';const sl=line,sc=col;
-      while(i<src.length&&peek()!==q){
-        if(peek()==='\\'){adv();s+=adv();}else s+=adv();
+      const q=c,sl=line,sc=col;let s='';i++;col++;
+      while(i<src.length&&src[i]!==q){
+        if(src[i]==='\\'){i++;const e={n:'\n',t:'\t','\\':'\\','"':'"',"'":"'"};s+=e[src[i]]||src[i];}
+        else{if(src[i]==='\n')line++;s+=src[i];}
+        i++;col++;
       }
-      if(i>=src.length)throw new SnakeError('Unterminated string',sl,sc);
-      adv();tokens.push({t:TT.STR,v:s,line:sl,col:sc});continue;
+      if(i>=src.length)throw new Error('Unterminated string at line '+sl);
+      i++;push('STR',s,sl,sc);continue;
     }
-    // number
-    if(c>='0'&&c<='9'||(c==='-'&&peek(1)>='0'&&peek(1)<='9'&&(tokens.length===0||[TT.OP,TT.COMMA,TT.LPAREN,TT.LBRACKET,TT.COLON,TT.NEWLINE].includes(tokens[tokens.length-1].t)))){
+    if(c>='0'&&c<='9'){
       let n='';const nl=line,nc=col;
-      if(peek()==='-')n+=adv();
-      while(i<src.length&&(peek()>='0'&&peek()<='9'))n+=adv();
-      if(peek()==='.'&&peek(1)>='0'&&peek(1)<='9'){n+=adv();while(i<src.length&&peek()>='0'&&peek()<='9')n+=adv();}
-      tokens.push({t:TT.NUM,v:parseFloat(n),line:nl,col:nc});continue;
+      while(i<src.length&&(src[i]>='0'&&src[i]<='9'||src[i]==='.')){n+=src[i++];col++;}
+      push('NUM',parseFloat(n),nl,nc);continue;
     }
-    // ident / keyword
-    if(c>='a'&&c<='z'||c>='A'&&c<='Z'||c==='_'){
+    const t2=src.slice(i,i+2);
+    if(['==','!=','<=','>=','..','&&','||','->'].includes(t2)){push('OP',t2,line,col);i+=2;col+=2;continue;}
+    if(c==='?'){push('?',c,line,col);i++;col++;continue;}
+    if(c===':'){push(':',c,line,col);i++;col++;continue;}
+    if(c==='.'){push('.',c,line,col);i++;col++;continue;}
+    if('+-*/%<>=!&|^~'.includes(c)){push('OP',c,line,col);i++;col++;continue;}
+    if('(){}[];,'.includes(c)){push(c,c,line,col);i++;col++;continue;}
+    if(/[a-zA-Z_]/.test(c)){
       let id='';const il=line,ic=col;
-      while(i<src.length&&(peek()>='a'&&peek()<='z'||peek()>='A'&&peek()<='Z'||peek()==='_'||peek()>='0'&&peek()<='9'))id+=adv();
-      const t=KEYWORDS.has(id)?TT.KW:TT.IDENT;
-      tokens.push({t,v:id,line:il,col:ic});continue;
+      while(i<src.length&&/\w/.test(src[i])){id+=src[i++];col++;}
+      const KW=['let','const','fn','give','when','otherwise','loop','repeat','as',
+                'each','in','try','catch','throw','stop','skip','match','case',
+                'true','false','null','and','or','not','new'];
+      push(KW.includes(id)?'KW':'ID',id,il,ic);continue;
     }
-    // two-char ops
-    const two=src.slice(i,i+2);
-    if(two==='=>'){tokens.push({t:TT.ARROW,v:'=>',line,col});i+=2;col+=2;continue;}
-    if(two==='=='){tokens.push({t:TT.OP,v:'==',line,col});i+=2;col+=2;continue;}
-    if(two==='!='){tokens.push({t:TT.OP,v:'!=',line,col});i+=2;col+=2;continue;}
-    if(two==='<='){tokens.push({t:TT.OP,v:'<=',line,col});i+=2;col+=2;continue;}
-    if(two==='>='){tokens.push({t:TT.OP,v:'>=',line,col});i+=2;col+=2;continue;}
-    if(two==='..'){tokens.push({t:TT.OP,v:'..',line,col});i+=2;col+=2;continue;}
-    // single-char
-    const singles={'(':TT.LPAREN,')':TT.RPAREN,'{':TT.LBRACE,'}':TT.RBRACE,
-      '[':TT.LBRACKET,']':TT.RBRACKET,',':TT.COMMA,':':TT.COLON,
-      '.':TT.DOT,';':TT.SEMI,'?':TT.QUESTION};
-    if(singles[c]){tokens.push({t:singles[c],v:c,line,col});adv();continue;}
-    if('+-*/%<>=!&|^~'.includes(c)){tokens.push({t:TT.OP,v:c,line,col});adv();continue;}
-    adv(); // skip unknown
+    i++;col++;
   }
-  tokens.push({t:TT.EOF,v:'',line,col});
-  return tokens;
+  t.push({t:'EOF',v:'',line,col});return t;
+}
+// ── Parser ────────────────────────────────────────────────────
+function parse(toks){
+  let p=0;
+  const pk=(n=0)=>toks[p+n]||{t:'EOF',v:''};
+  const adv=()=>toks[p++]||{t:'EOF',v:''};
+  const expect=(t,v)=>{const k=adv();if(k.t!==t||(v!==undefined&&k.v!==v))throw new Error('Expected '+(v||t)+' got \''+k.v+'\' at line '+k.line);return k;};
+  const match=(t,v)=>{if(pk().t===t&&(v===undefined||pk().v===v)){adv();return true;}return false;};
+  const block=()=>{expect('{');const s=[];while(pk().t!=='}'){if(pk().t==='EOF')throw new Error('Unclosed {');s.push(stmt());}adv();return s;};
+  const params=()=>{const ps=[];while(pk().t!==')'){const n=expect('ID').v;let d=null;if(pk().t==='OP'&&pk().v==='='){adv();d=expr();}ps.push({n,d});if(!match(','))break;}return ps;};
+  const args=()=>{const a=[];while(pk().t!==')'){a.push(expr());if(!match(','))break;}return a;};
+
+  function stmt(){
+    const tok=pk();
+    if(tok.t==='KW'){
+      if(tok.v==='let'||tok.v==='const'){adv();const n=expect('ID').v;expect('OP','=');const v=expr();return{t:'Let',n,v,line:tok.line};}
+      if(tok.v==='fn'&&pk(1).t==='ID'){adv();const n=expect('ID').v;expect('(');const ps=params();expect(')');return{t:'Fn',n,ps,b:block(),line:tok.line};}
+      if(tok.v==='give'){adv();const v=expr();return{t:'Give',v,line:tok.line};}
+      if(tok.v==='stop'){adv();return{t:'Stop'};}
+      if(tok.v==='skip'){adv();return{t:'Skip'};}
+      if(tok.v==='throw'){adv();const v=expr();return{t:'Throw',v,line:tok.line};}
+      if(tok.v==='when'){
+        adv();const c=expr();const th=block();const branches=[];
+        while(pk().t==='KW'&&pk().v==='otherwise'){adv();
+          if(pk().t==='KW'&&pk().v==='when'){adv();const c2=expr();const b=block();branches.push({c:c2,b});}
+          else{branches.push({c:null,b:block()});break;}}
+        return{t:'When',c,th,branches,line:tok.line};
+      }
+      if(tok.v==='loop'){adv();return{t:'Loop',b:block(),line:tok.line};}
+      if(tok.v==='repeat'){adv();const n=expr();let iter=null;if(pk().t==='KW'&&pk().v==='as'){adv();iter=expect('ID').v;}return{t:'Rep',n,iter,b:block(),line:tok.line};}
+      if(tok.v==='each'){adv();const n=expect('ID').v;expect('KW','in');const arr=expr();return{t:'Each',n,arr,b:block(),line:tok.line};}
+      if(tok.v==='try'){adv();const tb=block();expect('KW','catch');expect('(');const en=expect('ID').v;expect(')');return{t:'Try',tb,en,cb:block(),line:tok.line};}
+      if(tok.v==='match'){adv();const v=expr();expect('{');const cases=[];while(pk().t!=='}'){expect('KW','case');const pat=expr();const b=block();cases.push({pat,b});}adv();return{t:'Match',v,cases,line:tok.line};}
+    }
+    const e=expr();
+    // assignment
+    if(pk().t==='OP'&&pk().v==='='){adv();const v=expr();return{t:'Asgn',target:e,v,line:tok.line};}
+    return{t:'Expr',e};
+  }
+
+  function expr(){return ternary();}
+  function ternary(){let l=or();if(pk().t==='?'){adv();const a=expr();expect(':');const b=expr();return{t:'Tern',c:l,a,b};}return l;}
+  function or(){let l=and();while((pk().t==='KW'&&pk().v==='or')||(pk().t==='OP'&&pk().v==='||')){adv();l={t:'Bin',op:'||',l,r:and()};}return l;}
+  function and(){let l=not();while((pk().t==='KW'&&pk().v==='and')||(pk().t==='OP'&&pk().v==='&&')){adv();l={t:'Bin',op:'&&',l,r:not()};}return l;}
+  function not(){if((pk().t==='KW'&&pk().v==='not')||(pk().t==='OP'&&pk().v==='!')){adv();return{t:'Un',op:'!',v:not()};}return cmp();}
+  function cmp(){let l=add();while(pk().t==='OP'&&['==','!=','<','>','<=','>='].includes(pk().v)){const op=adv().v;l={t:'Bin',op,l,r:add()};}return l;}
+  function add(){let l=mul();while(pk().t==='OP'&&['+','-','..'].includes(pk().v)){const op=adv().v;l={t:'Bin',op,l,r:mul()};}return l;}
+  function mul(){let l=un();while(pk().t==='OP'&&['*','/','%'].includes(pk().v)){const op=adv().v;l={t:'Bin',op,l,r:un()};}return l;}
+  function un(){if(pk().t==='OP'&&pk().v==='-'){adv();return{t:'Un',op:'-',v:un()};}return post();}
+  function post(){
+    let e=prim();
+    while(true){
+      if(pk().t==='.'){adv();const f=expect('ID').v;
+        if(pk().t==='('){adv();const a=args();expect(')');e={t:'Method',o:e,f,a};}
+        else e={t:'Field',o:e,f};}
+      else if(pk().t==='['){adv();const i=expr();expect(']');e={t:'Idx',o:e,i};}
+      else if(pk().t==='('){adv();const a=args();expect(')');e={t:'Call',f:e,a};}
+      else break;
+    }
+    return e;
+  }
+  function prim(){
+    const tok=pk();
+    if(tok.t==='NUM'){adv();return{t:'Num',v:tok.v};}
+    if(tok.t==='STR'){adv();return{t:'Str',v:tok.v};}
+    if(tok.t==='KW'&&tok.v==='true'){adv();return{t:'Bool',v:true};}
+    if(tok.t==='KW'&&tok.v==='false'){adv();return{t:'Bool',v:false};}
+    if(tok.t==='KW'&&tok.v==='null'){adv();return{t:'Null'};}
+    if(tok.t==='['){adv();const els=[];while(pk().t!==']'){els.push(expr());if(!match(','))break;}expect(']');return{t:'Arr',els};}
+    if(tok.t==='{'){adv();const pairs=[];while(pk().t!=='}'){const k=adv().v;expect(':');const v=expr();pairs.push({k,v});if(!match(','))break;}expect('}');return{t:'Obj',pairs};}
+    if(tok.t==='KW'&&tok.v==='fn'){adv();expect('(');const ps=params();expect(')');return{t:'Lambda',ps,b:block()};}
+    if(tok.t==='('){adv();const e=expr();expect(')');return e;}
+    if(tok.t==='ID'){adv();if(pk().t==='('){adv();const a=args();expect(')');return{t:'CallN',n:tok.v,a,line:tok.line};}return{t:'Var',n:tok.v,line:tok.line};}
+    throw new Error("Unexpected '"+tok.v+"' at line "+tok.line);
+  }
+
+  const stmts=[];while(pk().t!=='EOF')stmts.push(stmt());return stmts;
 }
 </script>
 <script>
-// ── Parser ─────────────────────────────────────────────
-class Parser {
-  constructor(tokens){
-    this.tokens=tokens.filter(t=>t.t!==TT.NEWLINE&&t.t!==TT.SEMI);
-    this.pos=0;
-  }
-  peek(n=0){return this.tokens[this.pos+n]||{t:TT.EOF,v:''};}
-  adv(){return this.tokens[this.pos++]||{t:TT.EOF,v:''};}
-  expect(t,v){
-    const tok=this.adv();
-    if(tok.t!==t||(v!==undefined&&tok.v!==v))
-      throw new SnakeError(`Expected ${v||t} got '${tok.v}'`,tok.line,tok.col);
-    return tok;
-  }
-  match(t,v){
-    if(this.peek().t===t&&(v===undefined||this.peek().v===v)){this.adv();return true;}
-    return false;
-  }
-  parseProgram(){
-    const stmts=[];
-    while(this.peek().t!==TT.EOF)stmts.push(this.parseStmt());
-    return {type:'Program',body:stmts};
-  }
-  parseStmt(){
-    const tok=this.peek();
-    if(tok.t===TT.KW){
-      if(tok.v==='let'||tok.v==='const')return this.parseVarDecl();
-      if(tok.v==='fn'){
-        // fn name(...){} = declaration, fn(...){} = lambda expression statement
-        if(this.peek(1).t===TT.IDENT)return this.parseFnDecl();
-        return this.parseExprStmt();
-      }
-      if(tok.v==='give')return this.parseGive();
-      if(tok.v==='when')return this.parseWhen();
-      if(tok.v==='loop')return this.parseLoop();
-      if(tok.v==='repeat')return this.parseRepeat();
-      if(tok.v==='each')return this.parseEach();
-      if(tok.v==='try')return this.parseTry();
-      if(tok.v==='throw')return this.parseThrow();
-      if(tok.v==='stop')return{type:'Stop',line:this.adv().line};
-      if(tok.v==='skip')return{type:'Skip',line:this.adv().line};
-      if(tok.v==='match')return this.parseMatch();
+// ── Evaluator ─────────────────────────────────────────────────
+class RetSig{constructor(v){this.v=v;}}
+class StopSig{}
+class SkipSig{}
+
+const Engine={
+  MAX:50000,_iter:0,
+  run(src){
+    this._iter=0;
+    const env=new Env(null);
+    this.builtins(env);
+    this.execBlock(parse(tokenize(src)),env);
+  },
+  builtins(env){
+    env.set('PI',Math.PI);env.set('E',Math.E);env.set('INF',Infinity);
+    const bi=(n,f)=>env.set(n,{__b__:n,__f__:f});
+    bi('say',a=>{tlog(a.map(x=>this.str(x)).join(' '));return null;});
+    bi('ask',a=>prompt(a[0]||'')||'');
+    bi('size',a=>Array.isArray(a[0])?a[0].length:typeof a[0]==='string'?a[0].length:typeof a[0]==='object'&&a[0]?Object.keys(a[0]).length:0);
+    bi('num',a=>Number(a[0]));
+    bi('text',a=>this.str(a[0]));
+    bi('floor',a=>Math.floor(a[0]));
+    bi('ceil',a=>Math.ceil(a[0]));
+    bi('abs',a=>Math.abs(a[0]));
+    bi('rand',a=>Math.random()*(a[0]||1));
+    bi('sqrt',a=>Math.sqrt(a[0]));
+    bi('max',a=>Math.max(...(Array.isArray(a[0])?a[0]:a)));
+    bi('min',a=>Math.min(...(Array.isArray(a[0])?a[0]:a)));
+    bi('type',a=>Array.isArray(a[0])?'array':a[0]===null?'null':typeof a[0]);
+    bi('upper',a=>String(a[0]).toUpperCase());
+    bi('lower',a=>String(a[0]).toLowerCase());
+    bi('trim',a=>String(a[0]).trim());
+    bi('split',a=>String(a[0]).split(a[1]!==undefined?a[1]:','));
+    bi('join',a=>Array.isArray(a[0])?a[0].join(a[1]!==undefined?a[1]:', '):String(a[0]));
+    bi('push',a=>{if(Array.isArray(a[0])){a[0].push(a[1]);return a[0];}return null;});
+    bi('pop',a=>Array.isArray(a[0])?a[0].pop():null);
+    bi('has',a=>Array.isArray(a[0])?a[0].includes(a[1]):a[1] in (a[0]||{}));
+    bi('keys',a=>Object.keys(a[0]||{}));
+    bi('sort',a=>{const arr=[...a[0]];a[1]?arr.sort((x,y)=>this.callFn(a[1],[x,y])):arr.sort();return arr;});
+    bi('reverse',a=>[...a[0]].reverse());
+    bi('map',a=>a[0].map(x=>this.callFn(a[1],[x])));
+    bi('filter',a=>a[0].filter(x=>this.truthy(this.callFn(a[1],[x]))));
+    bi('reduce',a=>a[0].reduce((acc,x)=>this.callFn(a[1],[acc,x]),a[2]));
+    bi('now',a=>Date.now());
+    bi('range',a=>{const[s,e,st=1]=a;const r=[];for(let i=s;i<e;i+=st)r.push(i);return r;});
+  },
+  callFn(fn,args){
+    if(fn&&fn.__b__)return fn.__f__(args);
+    if(fn&&fn.__fn__){
+      const fe=new Env(fn.cl);
+      fn.ps.forEach((p,i)=>{fe.set(p.n,args[i]!==undefined?args[i]:(p.d?this.eval(p.d,fn.cl):null));});
+      const r=this.execBlock(fn.b,fe);
+      return r instanceof RetSig?r.v:null;
     }
-    return this.parseExprStmt();
-  }
-  parseVarDecl(){
-    const kw=this.adv();
-    const name=this.expect(TT.IDENT).v;
-    this.expect(TT.OP,'=');
-    const val=this.parseExpr();
-    return{type:'VarDecl',kind:kw.v,name,val,line:kw.line};
-  }
-  parseFnDecl(){
-    const kw=this.adv();
-    const name=this.expect(TT.IDENT).v;
-    this.expect(TT.LPAREN);
-    const params=this.parseParams();
-    this.expect(TT.RPAREN);
-    const body=this.parseBlock();
-    return{type:'FnDecl',name,params,body,line:kw.line};
-  }
-  parseParams(){
-    const params=[];
-    while(this.peek().t!==TT.RPAREN&&this.peek().t!==TT.EOF){
-      const name=this.expect(TT.IDENT).v;
-      let def=null;
-      if(this.peek().t===TT.OP&&this.peek().v==='='){this.adv();def=this.parseExpr();}
-      params.push({name,def});
-      if(!this.match(TT.COMMA))break;
+    if(typeof fn==='function')return fn(...args);
+    throw new Error('Not callable: '+this.str(fn));
+  },
+  execBlock(ss,env){
+    for(const s of ss){
+      if(++this._iter>this.MAX)throw new Error('Max iterations exceeded');
+      const r=this.execStmt(s,env);
+      if(r instanceof RetSig||r instanceof StopSig||r instanceof SkipSig)return r;
     }
-    return params;
-  }
-  parseBlock(){
-    this.expect(TT.LBRACE);
-    const stmts=[];
-    while(this.peek().t!==TT.RBRACE&&this.peek().t!==TT.EOF)stmts.push(this.parseStmt());
-    this.expect(TT.RBRACE);
-    return{type:'Block',body:stmts};
-  }
-  parseGive(){
-    const kw=this.adv();
-    const val=this.parseExpr();
-    return{type:'Give',val,line:kw.line};
-  }
-  parseWhen(){
-    const kw=this.adv();
-    const cond=this.parseExpr();
-    const then=this.parseBlock();
-    const branches=[];
-    while(this.peek().t===TT.KW&&this.peek().v==='otherwise'){
-      this.adv();
-      if(this.peek().t===TT.KW&&this.peek().v==='when'){
-        this.adv();
-        const c=this.parseExpr();
-        const b=this.parseBlock();
-        branches.push({cond:c,body:b});
-      } else {
-        const b=this.parseBlock();
-        branches.push({cond:null,body:b});
+  },
+  execStmt(s,env){
+    switch(s.t){
+      case 'Let':env.set(s.n,this.eval(s.v,env));break;
+      case 'Fn':env.set(s.n,{__fn__:true,ps:s.ps,b:s.b,cl:env});break;
+      case 'Give':return new RetSig(this.eval(s.v,env));
+      case 'Stop':return new StopSig();
+      case 'Skip':return new SkipSig();
+      case 'Throw':{const v=this.eval(s.v,env);throw typeof v==='string'?new Error(v):v;}
+      case 'Expr':this.eval(s.e,env);break;
+      case 'Asgn':{
+        const v=this.eval(s.v,env);
+        const t=s.target;
+        if(t.t==='Var')env.assign(t.n,v);
+        else if(t.t==='Field'){const o=this.eval(t.o,env);o[t.f]=v;}
+        else if(t.t==='Idx'){const o=this.eval(t.o,env);o[this.eval(t.i,env)]=v;}
         break;
       }
-    }
-    return{type:'When',cond,then,branches,line:kw.line};
-  }
-  parseLoop(){
-    const kw=this.adv();
-    const body=this.parseBlock();
-    return{type:'Loop',body,line:kw.line};
-  }
-  parseRepeat(){
-    const kw=this.adv();
-    const count=this.parseExpr();
-    let iter=null;
-    if(this.peek().t===TT.KW&&this.peek().v==='as'){this.adv();iter=this.expect(TT.IDENT).v;}
-    const body=this.parseBlock();
-    return{type:'Repeat',count,iter,body,line:kw.line};
-  }
-  parseEach(){
-    const kw=this.adv();
-    const iter=this.expect(TT.IDENT).v;
-    this.expect(TT.KW,'in');
-    const arr=this.parseExpr();
-    const body=this.parseBlock();
-    return{type:'Each',iter,arr,body,line:kw.line};
-  }
-  parseTry(){
-    const kw=this.adv();
-    const tryBody=this.parseBlock();
-    this.expect(TT.KW,'catch');
-    this.expect(TT.LPAREN);
-    const errName=this.expect(TT.IDENT).v;
-    this.expect(TT.RPAREN);
-    const catchBody=this.parseBlock();
-    return{type:'TryCatch',tryBody,errName,catchBody,line:kw.line};
-  }
-  parseThrow(){
-    const kw=this.adv();
-    const val=this.parseExpr();
-    return{type:'Throw',val,line:kw.line};
-  }
-  parseMatch(){
-    const kw=this.adv();
-    const subject=this.parseExpr();
-    this.expect(TT.LBRACE);
-    const cases=[];
-    while(this.peek().t!==TT.RBRACE&&this.peek().t!==TT.EOF){
-      this.expect(TT.KW,'case');
-      const pattern=this.parseExpr();
-      const body=this.parseBlock();
-      cases.push({pattern,body});
-    }
-    this.expect(TT.RBRACE);
-    return{type:'Match',subject,cases,line:kw.line};
-  }
-  parseExprStmt(){
-    const expr=this.parseExpr();
-    return{type:'ExprStmt',expr};
-  }
-  parseExpr(){return this.parseTernary();}
-  parseTernary(){
-    let left=this.parseOr();
-    if(this.peek().t===TT.QUESTION){
-      this.adv();
-      const then=this.parseExpr();
-      this.expect(TT.COLON);
-      const else_=this.parseExpr();
-      return{type:'Ternary',cond:left,then,else:else_};
-    }
-    return left;
-  }
-  parseOr(){
-    let left=this.parseAnd();
-    while(this.peek().t===TT.KW&&this.peek().v==='or'){
-      this.adv();left={type:'BinOp',op:'or',left,right:this.parseAnd()};
-    }
-    return left;
-  }
-  parseAnd(){
-    let left=this.parseNot();
-    while(this.peek().t===TT.KW&&this.peek().v==='and'){
-      this.adv();left={type:'BinOp',op:'and',left,right:this.parseNot()};
-    }
-    return left;
-  }
-  parseNot(){
-    if(this.peek().t===TT.KW&&this.peek().v==='not'){
-      this.adv();return{type:'UnaryOp',op:'not',val:this.parseNot()};
-    }
-    return this.parseCompare();
-  }
-  parseCompare(){
-    let left=this.parseAdd();
-    const ops=['==','!=','<','>','<=','>='];
-    while(this.peek().t===TT.OP&&ops.includes(this.peek().v)){
-      const op=this.adv().v;left={type:'BinOp',op,left,right:this.parseAdd()};
-    }
-    return left;
-  }
-  parseAdd(){
-    let left=this.parseMul();
-    while(this.peek().t===TT.OP&&(this.peek().v==='+'||this.peek().v==='-'||this.peek().v==='..')){
-      const op=this.adv().v;left={type:'BinOp',op,left,right:this.parseMul()};
-    }
-    return left;
-  }
-  parseMul(){
-    let left=this.parseUnary();
-    while(this.peek().t===TT.OP&&(this.peek().v==='*'||this.peek().v==='/'||this.peek().v==='%')){
-      const op=this.adv().v;left={type:'BinOp',op,left,right:this.parseUnary()};
-    }
-    return left;
-  }
-  parseUnary(){
-    if(this.peek().t===TT.OP&&this.peek().v==='-'){
-      this.adv();return{type:'UnaryOp',op:'-',val:this.parseUnary()};
-    }
-    return this.parsePostfix();
-  }
-  parsePostfix(){
-    let expr=this.parsePrimary();
-    while(true){
-      if(this.peek().t===TT.DOT){
-        this.adv();
-        const prop=this.expect(TT.IDENT).v;
-        if(this.peek().t===TT.LPAREN){
-          this.adv();
-          const args=this.parseArgs();
-          this.expect(TT.RPAREN);
-          expr={type:'MethodCall',obj:expr,method:prop,args};
-        } else {
-          expr={type:'FieldAccess',obj:expr,field:prop};
-        }
-      } else if(this.peek().t===TT.LBRACKET){
-        this.adv();
-        const idx=this.parseExpr();
-        this.expect(TT.RBRACKET);
-        expr={type:'IndexAccess',obj:expr,idx};
-      } else if(this.peek().t===TT.LPAREN){
-        this.adv();
-        const args=this.parseArgs();
-        this.expect(TT.RPAREN);
-        expr={type:'Call',callee:expr,args};
-      } else if(this.peek().t===TT.OP&&this.peek().v==='='){
-        // assignment
-        this.adv();
-        const val=this.parseExpr();
-        expr={type:'Assign',target:expr,val};
-      } else break;
-    }
-    return expr;
-  }
-  parseArgs(){
-    const args=[];
-    while(this.peek().t!==TT.RPAREN&&this.peek().t!==TT.EOF){
-      args.push(this.parseExpr());
-      if(!this.match(TT.COMMA))break;
-    }
-    return args;
-  }
-  parsePrimary(){
-    const tok=this.peek();
-    if(tok.t===TT.NUM){this.adv();return{type:'Num',val:tok.v};}
-    if(tok.t===TT.KW&&tok.v==='true'){this.adv();return{type:'Bool',val:true};}
-    if(tok.t===TT.KW&&tok.v==='false'){this.adv();return{type:'Bool',val:false};}
-    if(tok.t===TT.KW&&tok.v==='null'){this.adv();return{type:'Null'};}
-    if(tok.t===TT.STR){this.adv();return{type:'Str',val:tok.v};}
-    if(tok.t===TT.IDENT){this.adv();return{type:'Ident',name:tok.v,line:tok.line};}
-    if(tok.t===TT.LPAREN){
-      this.adv();const e=this.parseExpr();this.expect(TT.RPAREN);return e;
-    }
-    if(tok.t===TT.LBRACKET){
-      this.adv();
-      const items=[];
-      while(this.peek().t!==TT.RBRACKET&&this.peek().t!==TT.EOF){
-        items.push(this.parseExpr());
-        if(!this.match(TT.COMMA))break;
-      }
-      this.expect(TT.RBRACKET);
-      return{type:'Array',items};
-    }
-    if(tok.t===TT.LBRACE){
-      this.adv();
-      const pairs=[];
-      while(this.peek().t!==TT.RBRACE&&this.peek().t!==TT.EOF){
-        let key;
-        if(this.peek().t===TT.IDENT||this.peek().t===TT.STR)key=this.adv().v;
-        else throw new SnakeError('Expected object key',tok.line,tok.col);
-        this.expect(TT.COLON);
-        const val=this.parseExpr();
-        pairs.push({key,val});
-        if(!this.match(TT.COMMA))break;
-      }
-      this.expect(TT.RBRACE);
-      return{type:'Obj',pairs};
-    }
-    if(tok.t===TT.KW&&tok.v==='fn'){
-      this.adv();
-      this.expect(TT.LPAREN);
-      const params=this.parseParams();
-      this.expect(TT.RPAREN);
-      const body=this.parseBlock();
-      return{type:'FnExpr',params,body};
-    }
-    throw new SnakeError(`Unexpected token '${tok.v}'`,tok.line,tok.col);
-  }
-}
-</script>
-<script>
-// ── Evaluator ──────────────────────────────────────────
-class ReturnSignal{constructor(v){this.val=v;}}
-class StopSignal{}
-class SkipSignal{}
-class ThrowSignal{constructor(v){this.val=v;}}
-
-class Environment{
-  constructor(parent=null){this.vars=new Map();this.parent=parent;}
-  get(name){
-    if(this.vars.has(name))return this.vars.get(name);
-    if(this.parent)return this.parent.get(name);
-    throw new SnakeError(`Undefined variable '${name}'`);
-  }
-  set(name,val){
-    if(this.vars.has(name)){this.vars.set(name,val);return;}
-    if(this.parent&&this.parent.has(name)){this.parent.set(name,val);return;}
-    this.vars.set(name,val);
-  }
-  def(name,val){this.vars.set(name,val);}
-  has(name){return this.vars.has(name)||(this.parent?this.parent.has(name):false);}
-}
-
-class Interpreter{
-  constructor(outputFn){
-    this.output=outputFn;
-    this.globals=new Environment();
-    this._setupBuiltins();
-  }
-  _setupBuiltins(){
-    const G=this.globals;
-    const out=this.output;
-    G.def('PI',Math.PI);G.def('E',Math.E);G.def('INF',Infinity);
-    G.def('say',(...a)=>{out(a.map(v=>this._str(v)).join(' '));return null;});
-    G.def('ask',(p='')=>{return prompt(p)||'';});
-    G.def('size',(v)=>Array.isArray(v)?v.length:typeof v==='string'?v.length:typeof v==='object'&&v?Object.keys(v).length:0);
-    G.def('num',(v)=>Number(v));
-    G.def('text',(v)=>this._str(v));
-    G.def('floor',(v)=>Math.floor(v));
-    G.def('ceil',(v)=>Math.ceil(v));
-    G.def('abs',(v)=>Math.abs(v));
-    G.def('rand',(a=0,b=1)=>Math.random()*(b-a)+a);
-    G.def('sqrt',(v)=>Math.sqrt(v));
-    G.def('max',(...a)=>Math.max(...a.flat()));
-    G.def('min',(...a)=>Math.min(...a.flat()));
-    G.def('type',(v)=>Array.isArray(v)?'array':v===null?'null':typeof v);
-    G.def('upper',(v)=>String(v).toUpperCase());
-    G.def('lower',(v)=>String(v).toLowerCase());
-    G.def('trim',(v)=>String(v).trim());
-    G.def('split',(v,d=',')=>String(v).split(d));
-    G.def('join',(arr,d=',')=>arr.join(d));
-    G.def('push',(arr,v)=>{arr.push(v);return arr;});
-    G.def('pop',(arr)=>arr.pop());
-    G.def('has',(obj,k)=>Array.isArray(obj)?obj.includes(k):k in (obj||{}));
-    G.def('keys',(obj)=>Object.keys(obj||{}));
-    G.def('now',()=>Date.now());
-    G.def('sort',(arr,fn=null)=>{const a=[...arr];fn?a.sort((x,y)=>fn(x,y)):a.sort();return a;});
-    G.def('reverse',(arr)=>[...arr].reverse());
-    G.def('map',(arr,fn)=>arr.map(v=>fn(v)));
-    G.def('filter',(arr,fn)=>arr.filter(v=>fn(v)));
-    G.def('reduce',(arr,fn,init)=>arr.reduce((a,v)=>fn(a,v),init));
-    G.def('tlog',(v)=>{out('[LOG] '+this._str(v));return null;});
-  }
-  _str(v){
-    if(v===null||v===undefined)return 'null';
-    if(typeof v==='boolean')return v?'true':'false';
-    if(Array.isArray(v))return '['+v.map(x=>this._str(x)).join(', ')+']';
-    if(typeof v==='object')return '{'+Object.entries(v).map(([k,vv])=>k+': '+this._str(vv)).join(', ')+'}';
-    if(typeof v==='function')return '<fn>';
-    return String(v);
-  }
-  _interpolate(s,env){
-    return s.replace(/\{([^}]+)\}/g,(_,expr)=>{
-      try{const t=tokenize(expr);const p=new Parser(t);const e=p.parseExpr();return this._str(this.evalExpr(e,env));}
-      catch(e){return '{'+expr+'}';}
-    });
-  }
-  run(src){
-    const tokens=tokenize(src);
-    const ast=new Parser(tokens).parseProgram();
-    const env=new Environment(this.globals);
-    for(const stmt of ast.body){
-      const r=this.evalStmt(stmt,env);
-      if(r instanceof ReturnSignal)break;
-    }
-  }
-  evalStmt(node,env){
-    switch(node.type){
-      case 'VarDecl':{
-        const v=this.evalExpr(node.val,env);
-        env.def(node.name,v);return null;
-      }
-      case 'FnDecl':{
-        const fn=this._makeFn(node.params,node.body,env);
-        env.def(node.name,fn);return null;
-      }
-      case 'Give':return new ReturnSignal(this.evalExpr(node.val,env));
-      case 'Stop':return new StopSignal();
-      case 'Skip':return new SkipSignal();
-      case 'Throw':{
-        const v=this.evalExpr(node.val,env);
-        throw new ThrowSignal(v);
-      }
       case 'When':{
-        if(this._truthy(this.evalExpr(node.cond,env))){
-          return this.evalBlock(node.then,env);
+        if(this.truthy(this.eval(s.c,env)))return this.execBlock(s.th,new Env(env));
+        for(const b of s.branches){
+          if(b.c===null||this.truthy(this.eval(b.c,env)))return this.execBlock(b.b,new Env(env));
         }
-        for(const b of node.branches){
-          if(b.cond===null||this._truthy(this.evalExpr(b.cond,env))){
-            return this.evalBlock(b.body,env);
-          }
-        }
-        return null;
+        break;
       }
       case 'Loop':{
         while(true){
-          const r=this.evalBlock(node.body,env);
-          if(r instanceof StopSignal)break;
-          if(r instanceof ReturnSignal)return r;
+          const r=this.execBlock(s.b,new Env(env));
+          if(r instanceof StopSig)break;
+          if(r instanceof RetSig)return r;
         }
-        return null;
+        break;
       }
-      case 'Repeat':{
-        const n=this.evalExpr(node.count,env);
+      case 'Rep':{
+        const n=Math.floor(this.eval(s.n,env));
         for(let i=0;i<n;i++){
-          const inner=new Environment(env);
-          if(node.iter)inner.def(node.iter,i);
-          const r=this.evalBlock(node.body,inner);
-          if(r instanceof StopSignal)break;
-          if(r instanceof SkipSignal)continue;
-          if(r instanceof ReturnSignal)return r;
+          const fe=new Env(env);
+          if(s.iter)fe.set(s.iter,i);
+          const r=this.execBlock(s.b,fe);
+          if(r instanceof StopSig)break;
+          if(r instanceof SkipSig)continue;
+          if(r instanceof RetSig)return r;
         }
-        return null;
+        break;
       }
       case 'Each':{
-        const arr=this.evalExpr(node.arr,env);
+        const arr=this.eval(s.arr,env);
         const items=Array.isArray(arr)?arr:Object.values(arr||{});
         for(const item of items){
-          const inner=new Environment(env);
-          inner.def(node.iter,item);
-          const r=this.evalBlock(node.body,inner);
-          if(r instanceof StopSignal)break;
-          if(r instanceof SkipSignal)continue;
-          if(r instanceof ReturnSignal)return r;
+          const fe=new Env(env);fe.set(s.n,item);
+          const r=this.execBlock(s.b,fe);
+          if(r instanceof StopSig)break;
+          if(r instanceof SkipSig)continue;
+          if(r instanceof RetSig)return r;
         }
-        return null;
+        break;
       }
-      case 'TryCatch':{
-        try{return this.evalBlock(node.tryBody,env);}
+      case 'Try':{
+        try{return this.execBlock(s.tb,new Env(env));}
         catch(e){
-          const inner=new Environment(env);
-          if(e instanceof ThrowSignal){
-            inner.def(node.errName,e.val);
-          } else {
-            inner.def(node.errName,{message:e.message||String(e),line:e.snakeLine||0});
-          }
-          return this.evalBlock(node.catchBody,inner);
+          const fe=new Env(env);
+          fe.set(s.en,typeof e==='object'&&e?{message:e.message||String(e),line:e.snakeLine||0}:String(e));
+          return this.execBlock(s.cb,fe);
         }
       }
       case 'Match':{
-        const subj=this.evalExpr(node.subject,env);
-        for(const c of node.cases){
-          const pat=this.evalExpr(c.pattern,env);
-          if(subj===pat||this._str(subj)===this._str(pat)){
-            return this.evalBlock(c.body,env);
-          }
+        const v=this.eval(s.v,env);
+        for(const c of s.cases){
+          if(this.eval(c.pat,env)===v)return this.execBlock(c.b,new Env(env));
         }
-        return null;
+        break;
       }
-      case 'ExprStmt':this.evalExpr(node.expr,env);return null;
-      case 'Block':return this.evalBlock(node,env);
-      default:return null;
     }
-  }
-  evalBlock(block,parentEnv){
-    const env=new Environment(parentEnv);
-    for(const stmt of block.body){
-      const r=this.evalStmt(stmt,env);
-      if(r instanceof ReturnSignal||r instanceof StopSignal||r instanceof SkipSignal)return r;
-    }
-    return null;
-  }
-  evalExpr(node,env){
-    switch(node.type){
-      case 'Num':return node.val;
-      case 'Bool':return node.val;
+  },
+  eval(node,env){
+    switch(node.t){
+      case 'Num':return node.v;
+      case 'Bool':return node.v;
       case 'Null':return null;
-      case 'Str':return this._interpolate(node.val,env);
-      case 'Ident':{
-        try{return env.get(node.name);}
-        catch(e){throw new SnakeError(e.message,node.line);}
+      case 'Str':return this.interp(node.v,env);
+      case 'Var':return env.get(node.n);
+      case 'Arr':return node.els.map(e=>this.eval(e,env));
+      case 'Obj':{const o={};node.pairs.forEach(p=>o[p.k]=this.eval(p.v,env));return o;}
+      case 'Lambda':return{__fn__:true,ps:node.ps,b:node.b,cl:env};
+      case 'Tern':return this.truthy(this.eval(node.c,env))?this.eval(node.a,env):this.eval(node.b,env);
+      case 'Un':
+        if(node.op==='-')return-this.eval(node.v,env);
+        if(node.op==='!')return!this.truthy(this.eval(node.v,env));
+        break;
+      case 'Bin':{
+        const L=this.eval(node.l,env),R=this.eval(node.r,env);
+        switch(node.op){
+          case '+':return(typeof L==='string'||typeof R==='string')?String(L)+String(R):L+R;
+          case '-':return L-R;case '*':return L*R;
+          case '/':if(R===0)throw new Error('Division by zero');return L/R;
+          case '%':return L%R;case '..':return String(L)+String(R);
+          case '==':return L===R;case '!=':return L!==R;
+          case '<':return L<R;case '>':return L>R;case '<=':return L<=R;case '>=':return L>=R;
+          case '&&':return this.truthy(L)&&this.truthy(R);
+          case '||':return this.truthy(L)||this.truthy(R);
+        }break;
       }
-      case 'Array':return node.items.map(i=>this.evalExpr(i,env));
-      case 'Obj':{
-        const o={};
-        for(const p of node.pairs)o[p.key]=this.evalExpr(p.val,env);
-        return o;
-      }
-      case 'FnExpr':return this._makeFn(node.params,node.body,env);
-      case 'BinOp':return this._binop(node.op,this.evalExpr(node.left,env),this.evalExpr(node.right,env));
-      case 'UnaryOp':{
-        const v=this.evalExpr(node.val,env);
-        if(node.op==='-')return -v;
-        if(node.op==='not')return !this._truthy(v);
-        return v;
-      }
-      case 'Ternary':return this._truthy(this.evalExpr(node.cond,env))?this.evalExpr(node.then,env):this.evalExpr(node.else,env);
-      case 'Assign':{
-        const val=this.evalExpr(node.val,env);
-        const t=node.target;
-        if(t.type==='Ident'){env.set(t.name,val);}
-        else if(t.type==='FieldAccess'){const o=this.evalExpr(t.obj,env);o[t.field]=val;}
-        else if(t.type==='IndexAccess'){const o=this.evalExpr(t.obj,env);const i=this.evalExpr(t.idx,env);o[i]=val;}
-        return val;
-      }
-      case 'FieldAccess':{
-        const o=this.evalExpr(node.obj,env);
-        if(o===null||o===undefined)throw new SnakeError('Cannot access field of null');
-        return o[node.field]??null;
-      }
-      case 'IndexAccess':{
-        const o=this.evalExpr(node.obj,env);
-        const i=this.evalExpr(node.idx,env);
-        return Array.isArray(o)?o[i]:o[i]??null;
-      }
-      case 'MethodCall':{
-        const o=this.evalExpr(node.obj,env);
-        const args=node.args.map(a=>this.evalExpr(a,env));
-        if(typeof o[node.method]==='function')return o[node.method](...args);
-        // array/string builtins
-        if(Array.isArray(o)){
-          if(node.method==='push'){o.push(...args);return o;}
-          if(node.method==='pop')return o.pop();
-          if(node.method==='size'||node.method==='length')return o.length;
-          if(node.method==='join')return o.join(args[0]??',');
-          if(node.method==='reverse')return [...o].reverse();
-          if(node.method==='has')return o.includes(args[0]);
-          if(node.method==='map')return o.map(v=>args[0](v));
-          if(node.method==='filter')return o.filter(v=>args[0](v));
-          if(node.method==='reduce')return o.reduce((a,v)=>args[0](a,v),args[1]);
-          if(node.method==='sort'){const a=[...o];args[0]?a.sort((x,y)=>args[0](x,y)):a.sort();return a;}
-          if(node.method==='slice')return o.slice(...args);
-          if(node.method==='indexOf')return o.indexOf(args[0]);
-        }
-        if(typeof o==='string'){
-          if(node.method==='upper')return o.toUpperCase();
-          if(node.method==='lower')return o.toLowerCase();
-          if(node.method==='trim')return o.trim();
-          if(node.method==='split')return o.split(args[0]??',');
-          if(node.method==='size'||node.method==='length')return o.length;
-          if(node.method==='has')return o.includes(args[0]);
-          if(node.method==='replace')return o.replace(args[0],args[1]);
-          if(node.method==='startsWith')return o.startsWith(args[0]);
-          if(node.method==='endsWith')return o.endsWith(args[0]);
-          if(node.method==='indexOf')return o.indexOf(args[0]);
-          if(node.method==='slice')return o.slice(...args);
-        }
-        if(typeof o==='object'&&o!==null){
-          if(node.method==='keys')return Object.keys(o);
-          if(node.method==='values')return Object.values(o);
-          if(node.method==='has')return node.method in o;
-          if(node.method==='size')return Object.keys(o).length;
-        }
-        throw new SnakeError(`No method '${node.method}' on ${this._str(o)}`);
+      case 'CallN':{
+        const fn=env.get(node.n);
+        const a=node.a.map(x=>this.eval(x,env));
+        return this.callFn(fn,a);
       }
       case 'Call':{
-        const fn=this.evalExpr(node.callee,env);
-        const args=node.args.map(a=>this.evalExpr(a,env));
-        if(typeof fn==='function')return fn(...args);
-        throw new SnakeError(`'${this._str(fn)}' is not callable`);
+        const fn=this.eval(node.f,env);
+        const a=node.a.map(x=>this.eval(x,env));
+        return this.callFn(fn,a);
       }
-      default:return null;
+      case 'Field':{const o=this.eval(node.o,env);if(o===null||o===undefined)throw new Error('Cannot access field of null');return o[node.f]??null;}
+      case 'Idx':{const o=this.eval(node.o,env);return o[this.eval(node.i,env)]??null;}
+      case 'Method':{
+        const o=this.eval(node.o,env);
+        const a=node.a.map(x=>this.eval(x,env));
+        if(o===null||o===undefined)throw new Error('Cannot call method on null');
+        // built-in string methods
+        if(typeof o==='string'){
+          const sm={upper:()=>o.toUpperCase(),lower:()=>o.toLowerCase(),trim:()=>o.trim(),
+            size:()=>o.length,length:()=>o.length,split:()=>o.split(a[0]??','),
+            has:()=>o.includes(a[0]),replace:()=>o.replace(a[0],a[1]),
+            startsWith:()=>o.startsWith(a[0]),endsWith:()=>o.endsWith(a[0]),
+            indexOf:()=>o.indexOf(a[0]),slice:()=>o.slice(a[0],a[1])};
+          if(sm[node.f])return sm[node.f]();
+        }
+        // built-in array methods
+        if(Array.isArray(o)){
+          const am={push:()=>{o.push(a[0]);return o;},pop:()=>o.pop(),
+            size:()=>o.length,length:()=>o.length,join:()=>o.join(a[0]??', '),
+            has:()=>o.includes(a[0]),indexOf:()=>o.indexOf(a[0]),
+            reverse:()=>[...o].reverse(),slice:()=>o.slice(a[0],a[1]),
+            map:()=>o.map(x=>this.callFn(a[0],[x])),
+            filter:()=>o.filter(x=>this.truthy(this.callFn(a[0],[x]))),
+            reduce:()=>o.reduce((acc,x)=>this.callFn(a[0],[acc,x]),a[1]),
+            sort:()=>{const arr=[...o];a[0]?arr.sort((x,y)=>this.callFn(a[0],[x,y])):arr.sort();return arr;}};
+          if(am[node.f])return am[node.f]();
+        }
+        // object methods
+        if(typeof o==='object'){
+          const om={keys:()=>Object.keys(o),values:()=>Object.values(o),
+            has:()=>node.f in o,size:()=>Object.keys(o).length};
+          if(om[node.f])return om[node.f]();
+        }
+        if(typeof o[node.f]==='function')return o[node.f](...a);
+        throw new Error("No method '"+node.f+"' on "+this.str(o));
+      }
     }
+    return null;
+  },
+  interp(s,env){
+    return s.replace(/\{([^}]+)\}/g,(_,e)=>{
+      try{return this.str(this.eval(parse(tokenize(e))[0]?.e||{t:'Null'},env));}
+      catch{return'{'+e+'}';}
+    });
+  },
+  truthy(v){return v!==null&&v!==false&&v!==0&&v!==''&&v!==undefined;},
+  str(v){
+    if(v===null||v===undefined)return 'null';
+    if(v===true)return 'true';if(v===false)return 'false';
+    if(Array.isArray(v))return '['+v.map(x=>this.str(x)).join(', ')+']';
+    if(typeof v==='object'&&!v.__fn__&&!v.__b__)return '{'+Object.entries(v).map(([k,vv])=>k+': '+this.str(vv)).join(', ')+'}';
+    if(v&&(v.__fn__||v.__b__))return '[fn]';
+    return String(v);
   }
-  _makeFn(params,body,closure){
-    return (...args)=>{
-      const env=new Environment(closure);
-      params.forEach((p,i)=>{
-        const v=args[i]!==undefined?args[i]:(p.def?this.evalExpr(p.def,closure):null);
-        env.def(p.name,v);
-      });
-      const r=this.evalBlock(body,env);
-      return r instanceof ReturnSignal?r.val:null;
-    };
-  }
-  _truthy(v){return v!==null&&v!==false&&v!==0&&v!==''&&v!==undefined;}
-  _binop(op,a,b){
-    switch(op){
-      case '+':return typeof a==='string'||typeof b==='string'?String(a)+String(b):a+b;
-      case '-':return a-b;case '*':return a*b;case '/':return b===0?Infinity:a/b;
-      case '%':return a%b;case '..':return String(a)+String(b);
-      case '==':return a===b;case '!=':return a!==b;
-      case '<':return a<b;case '>':return a>b;case '<=':return a<=b;case '>=':return a>=b;
-      case 'and':return this._truthy(a)&&this._truthy(b);
-      case 'or':return this._truthy(a)||this._truthy(b);
-      default:return null;
-    }
-  }
-}
+};
 </script>
 <script>
-// ═══════════════════════════════════════════════════════
-//  VFS & DEFAULT FILES
-// ═══════════════════════════════════════════════════════
-const MAIN_SNK = `# Snake Lang — Full Feature Demo
-# ─────────────────────────────────────────────────────
-
-# 1. Variables & constants
-let name = "Snake"
-const version = 1.0
-let pi_approx = PI
-
-say("Welcome to " .. name .. " v" .. text(version))
-say("PI ≈ " .. text(pi_approx))
-
-# 2. String interpolation
-let user = "World"
-say("Hello, {user}! PI = {PI}")
-
-# 3. Arithmetic & ternary
-let x = 10
-let y = 3
-say("x + y = {x + y}")
-say("x % y = {x % y}")
-let bigger = x > y ? "x is bigger" : "y is bigger"
-say(bigger)
-
-# 4. Functions with default params
-fn greet(who, greeting = "Hello") {
-  give "{greeting}, {who}!"
-}
-say(greet("Alice"))
-say(greet("Bob", "Hi"))
-
-# 5. Recursion — fibonacci
-fn fib(n) {
-  when n <= 1 { give n }
-  give fib(n - 1) + fib(n - 2)
-}
-say("fib(10) = {fib(10)}")
-
-# 6. when / otherwise
-fn classify(n) {
-  when n < 0 { give "negative" }
-  otherwise when n == 0 { give "zero" }
-  otherwise { give "positive" }
-}
-say(classify(-5))
-say(classify(0))
-say(classify(7))
-
-# 7. loop + stop
-let count = 0
-loop {
-  count = count + 1
-  when count >= 5 { stop }
-}
-say("loop stopped at count = {count}")
-
-# 8. repeat N as i
-let total = 0
-repeat 5 as i {
-  total = total + i
-}
-say("sum 0..4 = {total}")
-
-# 9. each in array
-let fruits = ["apple", "banana", "cherry"]
-each fruit in fruits {
-  say("  fruit: {fruit}")
-}
-
-# 10. Arrays & builtins
-let nums = [3, 1, 4, 1, 5, 9, 2, 6]
-say("size = {size(nums)}")
-say("max  = {max(nums)}")
-say("min  = {min(nums)}")
-say("sorted = {text(sort(nums))}")
-say("reversed = {text(reverse(nums))}")
-
-# 11. map / filter / reduce
-let doubled = map(nums, fn(n) { give n * 2 })
-say("doubled = {text(doubled)}")
-let evens = filter(nums, fn(n) { give n % 2 == 0 })
-say("evens = {text(evens)}")
-let sumAll = reduce(nums, fn(acc, n) { give acc + n }, 0)
-say("sum = {sumAll}")
-
-# 12. Objects
-let person = { name: "Alice", age: 30, active: true }
-say("name = {person.name}, age = {person.age}")
-person.age = 31
-say("updated age = {person.age}")
-say("keys = {text(keys(person))}")
-
-# 13. Closures
-fn makeCounter(start = 0) {
-  let c = start
-  give fn() {
-    c = c + 1
-    give c
-  }
-}
-let counter = makeCounter(10)
-say(counter())
-say(counter())
-say(counter())
-
-# 14. try / catch / throw
-fn safeDivide(a, b) {
-  when b == 0 { throw "Division by zero!" }
-  give a / b
-}
-try {
-  say(safeDivide(10, 2))
-  say(safeDivide(5, 0))
-} catch (err) {
-  say("Caught: {err}")
-}
-
-# 15. match / case
-let day = 3
-match day {
-  case 1 { say("Monday") }
-  case 2 { say("Tuesday") }
-  case 3 { say("Wednesday") }
-  case 4 { say("Thursday") }
-  case 5 { say("Friday") }
-}
-
-# 16. String methods
-let s = "  Hello, Snake!  "
-say(s.trim())
-say(s.trim().upper())
-say(s.trim().lower())
-let parts = "a,b,c,d".split(",")
-say(text(parts))
-say(join(parts, " | "))
-
-# 17. Math builtins
-say("sqrt(144) = {sqrt(144)}")
-say("floor(3.7) = {floor(3.7)}")
-say("ceil(3.2) = {ceil(3.2)}")
-say("abs(-42) = {abs(-42)}")
-
-# 18. type()
-say(type(42))
-say(type("hi"))
-say(type([1,2]))
-say(type({a:1}))
-say(type(null))
-say(type(true))
-
-# 19. Higher-order functions
-fn apply(func, val) { give func(val) }
-say(apply(fn(n){ give n * n }, 7))
-
-# 20. skip in each
-each n in [1,2,3,4,5,6] {
-  when n % 2 == 0 { skip }
-  say("odd: {n}")
-}
-
-say("--- Demo complete! ---")
-`;
-
-const EXAMPLES_SNK = `# Snake Lang — Extra Examples
-
-# Nested objects
-let config = {
-  server: { host: "localhost", port: 8080 },
-  debug: true
-}
-say("host: {config.server.host}:{config.server.port}")
-
-# Array of objects
-let users = [
-  { name: "Alice", score: 95 },
-  { name: "Bob",   score: 82 },
-  { name: "Carol", score: 91 }
-]
-let topUsers = filter(users, fn(u){ give u.score >= 90 })
-each u in topUsers {
-  say("{u.name}: {u.score}")
-}
-
-# Recursive sum
-fn sumList(arr, i) {
-  when i >= size(arr) { give 0 }
-  give arr[i] + sumList(arr, i + 1)
-}
-say("recursive sum = {sumList([1,2,3,4,5], 0)}")
-
-# String interpolation in loop
-repeat 3 as i {
-  say("iteration {i}: {i * i}")
-}
-
-# Nested functions
-fn outer(x) {
-  fn inner(y) { give x + y }
-  give inner(10)
-}
-say(outer(5))
-`;
-
-const vfs = new Map([
-  ['main.snk', MAIN_SNK],
-  ['examples.snk', EXAMPLES_SNK]
-]);
-let activeFile = 'main.snk';
-let openTabs = ['main.snk'];
-</script>
-<script>
-// ═══════════════════════════════════════════════════════
-//  SYNTAX HIGHLIGHT
-// ═══════════════════════════════════════════════════════
-const KW_LIST = ['let','const','fn','give','when','otherwise','loop','repeat',
-  'as','each','in','try','catch','throw','stop','skip','match','case',
-  'true','false','null','and','or','not'];
-const BI_LIST = ['say','ask','size','num','text','floor','ceil','abs','rand',
-  'sqrt','max','min','type','upper','lower','trim','split','join','push','pop',
-  'has','keys','now','sort','reverse','map','filter','reduce','tlog'];
-const CONST_LIST = ['PI','E','INF'];
+// ── Syntax Highlight ──────────────────────────────────────────
+const KWS=['let','const','fn','give','when','otherwise','loop','repeat','as',
+  'each','in','try','catch','throw','stop','skip','match','case',
+  'true','false','null','and','or','not','new'];
+const BIS=['say','ask','size','num','text','floor','ceil','abs','rand','sqrt',
+  'max','min','type','upper','lower','trim','split','join','push','pop',
+  'has','keys','sort','reverse','map','filter','reduce','now','range'];
 
 function highlight(code){
-  // escape HTML first
-  let s = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // comments
-  s = s.replace(/(#[^\n]*)/g,'<span class="hl-cmt">$1</span>');
-  // strings (simple, no nesting)
-  s = s.replace(/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g,'<span class="hl-str">$1</span>');
-  // numbers
-  s = s.replace(/\b(\d+\.?\d*)\b/g,'<span class="hl-num">$1</span>');
-  // constants
-  s = s.replace(/\b(PI|E|INF)\b/g,'<span class="hl-const">$1</span>');
-  // keywords
-  const kwRe = new RegExp('\\b('+KW_LIST.join('|')+')\\b','g');
-  s = s.replace(kwRe,'<span class="hl-kw">$1</span>');
-  // builtins
-  const biRe = new RegExp('\\b('+BI_LIST.join('|')+')\\b(?=\\s*\\()','g');
-  s = s.replace(biRe,'<span class="hl-bi">$1</span>');
-  // function names (ident before '(')
-  s = s.replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)(?=\s*\()/g,(m,n)=>{
-    if(KW_LIST.includes(n)||BI_LIST.includes(n))return m;
-    return '<span class="hl-fn">'+n+'</span>';
-  });
-  return s;
-}
-</script>
-<script>
-// ═══════════════════════════════════════════════════════
-//  EDITOR UI
-// ═══════════════════════════════════════════════════════
-const editor = document.getElementById('editor');
-const hlLayer = document.getElementById('highlight-layer');
-const lineNums = document.getElementById('line-numbers');
-const acBox = document.getElementById('autocomplete');
-let acItems=[], acIdx=-1;
-
-function updateEditor(){
-  const code = editor.value;
-  hlLayer.innerHTML = highlight(code) + '\n';
-  // line numbers
-  const lines = code.split('\n');
-  lineNums.innerHTML = lines.map((_,i)=>`<div>${i+1}</div>`).join('');
-  lineNums.scrollTop = editor.scrollTop;
-  updateOutline();
-  if(activeFile) vfs.set(activeFile, code);
-}
-
-function syncScroll(){
-  lineNums.scrollTop = editor.scrollTop;
-}
-
-editor.addEventListener('input', updateEditor);
-editor.addEventListener('scroll', ()=>{
-  hlLayer.scrollTop = editor.scrollTop;
-  hlLayer.scrollLeft = editor.scrollLeft;
-  lineNums.scrollTop = editor.scrollTop;
-});
-
-editor.addEventListener('keydown', e=>{
-  // Tab
-  if(e.key==='Tab'){
-    e.preventDefault();
-    const s=editor.selectionStart, en=editor.selectionEnd;
-    if(s===en){
-      editor.value=editor.value.slice(0,s)+'  '+editor.value.slice(en);
-      editor.selectionStart=editor.selectionEnd=s+2;
-    } else {
-      const lines=editor.value.split('\n');
-      let pos=0, startLine=-1, endLine=-1;
-      for(let i=0;i<lines.length;i++){
-        if(pos<=s&&s<=pos+lines[i].length)startLine=i;
-        if(pos<=en&&en<=pos+lines[i].length)endLine=i;
-        pos+=lines[i].length+1;
-      }
-      for(let i=startLine;i<=endLine;i++)lines[i]='  '+lines[i];
-      editor.value=lines.join('\n');
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let out='',i=0;
+  while(i<code.length){
+    // comment
+    if(code[i]==='#'){
+      let s='';while(i<code.length&&code[i]!=='\n')s+=code[i++];
+      out+='<span class="c">'+esc(s)+'</span>';continue;
     }
-    updateEditor();return;
-  }
-  // Ctrl+Enter run
-  if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();runCode();return;}
-  // Ctrl+S save
-  if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveFile();return;}
-  // Ctrl+/ comment
-  if(e.ctrlKey&&e.key==='/'){e.preventDefault();toggleComment();return;}
-  // Ctrl+F find
-  if(e.ctrlKey&&e.key==='f'){e.preventDefault();openFindBar();return;}
-  // Ctrl+Space autocomplete
-  if(e.ctrlKey&&e.key===' '){e.preventDefault();showAutocomplete();return;}
-  // autocomplete navigation
-  if(acBox.style.display==='block'){
-    if(e.key==='ArrowDown'){e.preventDefault();acNav(1);return;}
-    if(e.key==='ArrowUp'){e.preventDefault();acNav(-1);return;}
-    if(e.key==='Enter'||e.key==='Tab'){
-      if(acIdx>=0){e.preventDefault();applyAC(acItems[acIdx]);return;}
+    // string
+    if(code[i]==='"'||code[i]==="'"){
+      const q=code[i];let s=q;i++;
+      while(i<code.length&&code[i]!==q){if(code[i]==='\\')s+=code[i++];s+=code[i++];}
+      s+=q;i++;out+='<span class="s">'+esc(s)+'</span>';continue;
     }
-    if(e.key==='Escape'){hideAC();return;}
+    // number
+    if(/\d/.test(code[i])){
+      let s='';while(i<code.length&&/[\d.]/.test(code[i]))s+=code[i++];
+      out+='<span class="n">'+s+'</span>';continue;
+    }
+    // ident/keyword
+    if(/[a-zA-Z_]/.test(code[i])){
+      let s='';while(i<code.length&&/\w/.test(code[i]))s+=code[i++];
+      if(KWS.includes(s))out+='<span class="k">'+s+'</span>';
+      else if(BIS.includes(s))out+='<span class="b">'+s+'</span>';
+      else if(code[i]==='(')out+='<span class="f">'+s+'</span>';
+      else out+='<span class="v">'+s+'</span>';
+      continue;
+    }
+    out+=esc(code[i++]);
   }
-});
-
-function toggleComment(){
-  const s=editor.selectionStart;
-  const lines=editor.value.split('\n');
-  let pos=0, ln=0;
-  for(let i=0;i<lines.length;i++){
-    if(pos+lines[i].length>=s){ln=i;break;}
-    pos+=lines[i].length+1;
-  }
-  if(lines[ln].trimStart().startsWith('#')){
-    lines[ln]=lines[ln].replace(/^(\s*)#\s?/,'$1');
-  } else {
-    lines[ln]='# '+lines[ln];
-  }
-  editor.value=lines.join('\n');
-  updateEditor();
+  return out;
 }
 
-function saveFile(){
-  if(activeFile) vfs.set(activeFile, editor.value);
-  tprint('<span style="color:var(--accent2)">Saved: '+activeFile+'</span>');
-}
+// ── VFS ───────────────────────────────────────────────────────
+const vfs=new Map([['main.snk',''],['examples.snk','']]);
+let activeFile='main.snk',openTabs=['main.snk'];
 
-// ── Autocomplete ───────────────────────────────────────
-const AC_WORDS = [
-  ...KW_LIST.map(w=>({w,t:'keyword'})),
-  ...BI_LIST.map(w=>({w,t:'builtin'})),
-  ...CONST_LIST.map(w=>({w,t:'const'}))
-];
-
-function showAutocomplete(){
-  const s=editor.selectionStart;
-  const before=editor.value.slice(0,s);
-  const m=before.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
-  const prefix=m?m[0]:'';
-  const matches=AC_WORDS.filter(a=>a.w.startsWith(prefix)&&a.w!==prefix);
-  if(!matches.length){hideAC();return;}
-  acItems=matches;acIdx=0;
-  acBox.innerHTML=matches.map((a,i)=>
-    `<div class="ac-item${i===0?' selected':''}" onclick="applyAC(acItems[${i}])">${a.w}<span class="ac-type">${a.t}</span></div>`
+function renderFiles(){
+  document.getElementById('file-list').innerHTML=[...vfs.keys()].map(n=>
+    `<div class="fi ${n===activeFile?'active':''}" onclick="openFile('${n}')">
+      <span class="fi-name">&#x1F4C4; ${n}</span>
+      <button class="fi-x" onclick="event.stopPropagation();deleteFile('${n}')">&#x2715;</button>
+      <span class="fi-dot"></span>
+    </div>`
   ).join('');
-  // position
-  const coords=getCaretCoords();
-  acBox.style.left=coords.x+'px';
-  acBox.style.top=coords.y+'px';
-  acBox.style.display='block';
-}
-
-function getCaretCoords(){
-  const rect=editor.getBoundingClientRect();
-  const s=editor.selectionStart;
-  const lines=editor.value.slice(0,s).split('\n');
-  const row=lines.length;
-  const col=lines[lines.length-1].length;
-  const lh=21, pad=8, cw=8.4;
-  return{
-    x:rect.left+pad+col*cw-editor.scrollLeft+48,
-    y:rect.top+pad+row*lh-editor.scrollTop
-  };
-}
-
-function acNav(d){
-  acIdx=Math.max(0,Math.min(acItems.length-1,acIdx+d));
-  acBox.querySelectorAll('.ac-item').forEach((el,i)=>el.classList.toggle('selected',i===acIdx));
-  acBox.querySelectorAll('.ac-item')[acIdx]?.scrollIntoView({block:'nearest'});
-}
-
-function applyAC(item){
-  const s=editor.selectionStart;
-  const before=editor.value.slice(0,s);
-  const m=before.match(/[a-zA-Z_][a-zA-Z0-9_]*$/);
-  const prefix=m?m[0]:'';
-  const start=s-prefix.length;
-  editor.value=editor.value.slice(0,start)+item.w+editor.value.slice(s);
-  editor.selectionStart=editor.selectionEnd=start+item.w.length;
-  hideAC();updateEditor();
-}
-
-function hideAC(){acBox.style.display='none';acIdx=-1;}
-document.addEventListener('click',e=>{if(!acBox.contains(e.target))hideAC();});
-</script>
-<script>
-// ═══════════════════════════════════════════════════════
-//  FILE EXPLORER, TABS, OUTLINE
-// ═══════════════════════════════════════════════════════
-function renderFileList(){
-  const fl=document.getElementById('file-list');
-  fl.innerHTML='';
-  for(const [name] of vfs){
-    const div=document.createElement('div');
-    div.className='file-item'+(name===activeFile?' active':'');
-    div.innerHTML=`<span class="fi-name" title="${name}">📄 ${name}</span>
-      <button class="fi-del" onclick="deleteFile('${name}')" title="Delete">✕</button>`;
-    div.querySelector('.fi-name').addEventListener('click',()=>openFile(name));
-    div.addEventListener('dblclick',()=>renameFile(name));
-    fl.appendChild(div);
-  }
-}
-
-function renderTabs(){
-  const tabs=document.getElementById('tabs');
-  tabs.innerHTML='';
-  for(const name of openTabs){
-    const div=document.createElement('div');
-    div.className='tab'+(name===activeFile?' active':'');
-    div.innerHTML=`${name}<button class="tab-close" onclick="closeTab('${name}')">✕</button>`;
-    div.addEventListener('click',e=>{if(!e.target.classList.contains('tab-close'))openFile(name);});
-    tabs.appendChild(div);
-  }
+  document.getElementById('tabs').innerHTML=openTabs.filter(n=>vfs.has(n)).map(n=>
+    `<div class="tab ${n===activeFile?'active':''}" onclick="openFile('${n}')">
+      &#x1F4C4; ${n}
+      <span class="tab-x" onclick="event.stopPropagation();closeTab('${n}')"></span>
+    </div>`
+  ).join('');
 }
 
 function openFile(name){
-  if(!vfs.has(name))return;
+  if(activeFile)vfs.set(activeFile,document.getElementById('editor').value);
   activeFile=name;
   if(!openTabs.includes(name))openTabs.push(name);
-  editor.value=vfs.get(name);
-  updateEditor();
-  renderFileList();
-  renderTabs();
+  document.getElementById('editor').value=vfs.get(name)||'';
+  syncEditor();renderFiles();
 }
-
 function closeTab(name){
   openTabs=openTabs.filter(t=>t!==name);
-  if(activeFile===name){
-    activeFile=openTabs[openTabs.length-1]||null;
-    if(activeFile)editor.value=vfs.get(activeFile)||'';
-    else editor.value='';
-    updateEditor();
-  }
-  renderTabs();renderFileList();
+  if(activeFile===name){activeFile=openTabs[openTabs.length-1]||null;document.getElementById('editor').value=activeFile?vfs.get(activeFile)||'':'';}
+  syncEditor();renderFiles();
 }
-
 function newFile(){
-  const name=prompt('File name (e.g. test.snk):');
-  if(!name||!name.trim())return;
-  const n=name.trim();
-  vfs.set(n,'# '+n+'\n');
-  openFile(n);
+  const n=prompt('File name:');if(!n)return;
+  const name=n.includes('.')?n:n+'.snk';
+  vfs.set(name,'');openFile(name);
 }
-
 function deleteFile(name){
   if(!confirm('Delete '+name+'?'))return;
-  vfs.delete(name);
-  openTabs=openTabs.filter(t=>t!==name);
-  if(activeFile===name){
-    activeFile=openTabs[0]||null;
-    editor.value=activeFile?vfs.get(activeFile)||'':'';
-    updateEditor();
-  }
-  renderFileList();renderTabs();
+  vfs.delete(name);openTabs=openTabs.filter(t=>t!==name);
+  if(activeFile===name){activeFile=openTabs[0]||null;document.getElementById('editor').value=activeFile?vfs.get(activeFile)||'':'';}
+  syncEditor();renderFiles();
 }
+function deleteActiveFile(){if(activeFile)deleteFile(activeFile);}
+function saveFile(){if(activeFile){vfs.set(activeFile,document.getElementById('editor').value);tlog('Saved: '+activeFile,'ok');}}
 
-function renameFile(name){
-  const newName=prompt('Rename to:',name);
-  if(!newName||newName===name)return;
-  const content=vfs.get(name);
-  vfs.delete(name);
-  vfs.set(newName,content);
-  openTabs=openTabs.map(t=>t===name?newName:t);
-  if(activeFile===name)activeFile=newName;
-  renderFileList();renderTabs();
-}
+// ── Editor ────────────────────────────────────────────────────
+const ed=()=>document.getElementById('editor');
+const hl=()=>document.getElementById('hl');
+const ln=()=>document.getElementById('lnums');
 
-// ── Outline ────────────────────────────────────────────
-function updateOutline(){
-  const code=editor.value;
+function syncEditor(){
+  const code=ed().value;
+  hl().innerHTML=highlight(code)+'\n';
   const lines=code.split('\n');
+  ln().innerHTML=lines.map((_,i)=>`<div class="${i===curLine()?'ln-cur':''}">${i+1}</div>`).join('');
+  ln().scrollTop=ed().scrollTop;
+  hl().scrollTop=ed().scrollTop;
+  hl().scrollLeft=ed().scrollLeft;
+  if(activeFile)vfs.set(activeFile,code);
+  updateOutline();updateStatus();
+}
+function curLine(){
+  const v=ed().value.substring(0,ed().selectionStart);
+  return v.split('\n').length-1;
+}
+function updateStatus(){
+  const v=ed().value.substring(0,ed().selectionStart);
+  const lines=v.split('\n');
+  document.getElementById('sb-pos').textContent='Ln '+lines.length+', Col '+(lines[lines.length-1].length+1);
+  const sel=Math.abs(ed().selectionEnd-ed().selectionStart);
+  const selEl=document.getElementById('sb-sel');
+  if(sel){selEl.textContent='('+sel+' selected)';selEl.style.display='flex';}
+  else selEl.style.display='none';
+}
+function updateOutline(){
+  const lines=ed().value.split('\n');
   const items=[];
-  lines.forEach((line,i)=>{
-    const fnM=line.match(/^\s*fn\s+(\w+)/);
-    if(fnM)items.push({name:fnM[1],line:i+1,kind:'fn'});
-    const letM=line.match(/^\s*(let|const)\s+(\w+)/);
-    if(letM)items.push({name:letM[2],line:i+1,kind:'let'});
+  lines.forEach((l,i)=>{
+    const fm=l.match(/^\s*fn\s+(\w+)/);if(fm)items.push({n:fm[1],l:i+1,k:'fn'});
+    const lm=l.match(/^\s*(let|const)\s+(\w+)/);if(lm)items.push({n:lm[2],l:i+1,k:'var'});
   });
-  const ol=document.getElementById('outline-list');
-  ol.innerHTML=items.map(it=>
-    `<div class="outline-item ol-${it.kind}" onclick="gotoLine(${it.line})">${it.kind==='fn'?'⚡':'◆'} ${it.name} <span style="color:var(--fg2);font-size:10px">:${it.line}</span></div>`
+  document.getElementById('outline').innerHTML=items.map(it=>
+    `<div class="ol-item ol-${it.k==='fn'?'fn':'var'}" onclick="gotoLine(${it.l})">
+      ${it.k==='fn'?'&#x26A1;':'&#x25C6;'} ${it.n} <span style="color:#555;font-size:10px">:${it.l}</span>
+    </div>`
   ).join('');
 }
-
 function gotoLine(n){
-  const lines=editor.value.split('\n');
-  let pos=0;
-  for(let i=0;i<n-1&&i<lines.length;i++)pos+=lines[i].length+1;
-  editor.focus();
-  editor.selectionStart=editor.selectionEnd=pos;
-  const lh=21;
-  editor.scrollTop=(n-3)*lh;
-}
-</script>
-<script>
-// ═══════════════════════════════════════════════════════
-//  TERMINAL
-// ═══════════════════════════════════════════════════════
-const terminal = document.getElementById('terminal');
-let termHistory=[], termHistIdx=-1;
-
-function tprint(html){
-  const div=document.createElement('div');
-  div.innerHTML=html;
-  terminal.appendChild(div);
-  terminal.scrollTop=terminal.scrollHeight;
+  const lines=ed().value.split('\n');
+  let pos=0;for(let i=0;i<n-1;i++)pos+=lines[i].length+1;
+  ed().focus();ed().selectionStart=ed().selectionEnd=pos;
+  ed().scrollTop=(n-3)*20;syncEditor();
 }
 
-function clearTerminal(){terminal.innerHTML='';}
-
-function termKey(e){
-  const inp=document.getElementById('terminal-input');
+ed().addEventListener('input',syncEditor);
+ed().addEventListener('scroll',()=>{hl().scrollTop=ed().scrollTop;hl().scrollLeft=ed().scrollLeft;ln().scrollTop=ed().scrollTop;});
+ed().addEventListener('click',updateStatus);
+ed().addEventListener('keyup',updateStatus);
+ed().addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='Enter'){e.preventDefault();runCode();return;}
+  if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveFile();return;}
+  if(e.ctrlKey&&e.key==='f'){e.preventDefault();toggleFind();return;}
+  if(e.ctrlKey&&e.key==='/'){e.preventDefault();toggleComment();return;}
+  if(e.ctrlKey&&e.key===' '){e.preventDefault();showAC();return;}
+  if(e.key==='Escape'){toggleFind(false);hideAC();return;}
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const s=ed().selectionStart,en=ed().selectionEnd,v=ed().value;
+    if(s!==en){
+      const before=v.slice(0,s),sel=v.slice(s,en),after=v.slice(en);
+      if(e.shiftKey){const u=sel.replace(/^    /gm,'');ed().value=before+u+after;ed().selectionStart=s;ed().selectionEnd=s+u.length;}
+      else{const ind=sel.replace(/^/gm,'    ');ed().value=before+ind+after;ed().selectionStart=s;ed().selectionEnd=s+ind.length;}
+    }else{ed().value=v.slice(0,s)+'    '+v.slice(en);ed().selectionStart=ed().selectionEnd=s+4;}
+    syncEditor();return;
+  }
   if(e.key==='Enter'){
-    const cmd=inp.value.trim();
-    if(!cmd)return;
-    termHistory.unshift(cmd);termHistIdx=-1;
-    tprint('<span style="color:var(--accent2)">snake&gt;</span> '+escHtml(cmd));
-    inp.value='';
-    execTermCmd(cmd);
+    const s=ed().selectionStart,v=ed().value;
+    const ls=v.lastIndexOf('\n',s-1)+1;
+    const line=v.slice(ls,s);
+    const indent=line.match(/^(\s*)/)[1];
+    const extra=line.trimEnd().endsWith('{')?'    ':'';
+    e.preventDefault();
+    const ins='\n'+indent+extra;
+    ed().value=v.slice(0,s)+ins+v.slice(ed().selectionEnd);
+    ed().selectionStart=ed().selectionEnd=s+ins.length;
+    syncEditor();return;
   }
-  if(e.key==='ArrowUp'){
-    termHistIdx=Math.min(termHistIdx+1,termHistory.length-1);
-    inp.value=termHistory[termHistIdx]||'';
+  // AC navigation
+  const ac=document.getElementById('ac');
+  if(ac.style.display==='block'){
+    if(e.key==='ArrowDown'){e.preventDefault();acNav(1);return;}
+    if(e.key==='ArrowUp'){e.preventDefault();acNav(-1);return;}
+    if(e.key==='Enter'||e.key==='Tab'){const sel=ac.querySelector('.sel');if(sel){e.preventDefault();applyAC(sel.dataset.word);return;}}
   }
-  if(e.key==='ArrowDown'){
-    termHistIdx=Math.max(termHistIdx-1,-1);
-    inp.value=termHistIdx>=0?termHistory[termHistIdx]:'';
-  }
-}
-
-function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function execTermCmd(cmd){
-  const parts=cmd.split(' ');
-  const c=parts[0];
-  switch(c){
-    case 'help':
-      tprint(`<span style="color:var(--accent2)">Commands:</span>
-  <span style="color:var(--yellow)">run</span>          — run current file
-  <span style="color:var(--yellow)">run &lt;file&gt;</span>   — run specific file
-  <span style="color:var(--yellow)">clear</span>        — clear terminal
-  <span style="color:var(--yellow)">ls</span>           — list files
-  <span style="color:var(--yellow)">cat &lt;file&gt;</span>   — show file content
-  <span style="color:var(--yellow)">new &lt;file&gt;</span>   — create new file
-  <span style="color:var(--yellow)">rm &lt;file&gt;</span>    — delete file
-  <span style="color:var(--yellow)">save</span>         — save current file
-  <span style="color:var(--yellow)">date</span>         — show current date/time
-  <span style="color:var(--yellow)">echo &lt;text&gt;</span> — print text
-  <span style="color:var(--yellow)">version</span>      — show Snake version`);
-      break;
-    case 'run':{
-      const fname=parts[1]||activeFile;
-      if(!fname){tprint('<span style="color:var(--red)">No file open</span>');break;}
-      if(!vfs.has(fname)){tprint('<span style="color:var(--red)">File not found: '+escHtml(fname)+'</span>');break;}
-      runFile(fname);break;
-    }
-    case 'clear':clearTerminal();break;
-    case 'ls':
-      tprint([...vfs.keys()].map(n=>`  <span style="color:var(--accent2)">📄 ${n}</span>`).join('<br>'));break;
-    case 'cat':{
-      const fn=parts[1];
-      if(!fn||!vfs.has(fn)){tprint('<span style="color:var(--red)">File not found</span>');break;}
-      tprint('<pre style="color:var(--fg);margin:0">'+escHtml(vfs.get(fn))+'</pre>');break;
-    }
-    case 'new':{
-      const fn=parts[1];
-      if(!fn){tprint('<span style="color:var(--red)">Usage: new &lt;filename&gt;</span>');break;}
-      vfs.set(fn,'# '+fn+'\n');
-      renderFileList();
-      tprint('<span style="color:var(--accent2)">Created: '+escHtml(fn)+'</span>');break;
-    }
-    case 'rm':{
-      const fn=parts[1];
-      if(!fn||!vfs.has(fn)){tprint('<span style="color:var(--red)">File not found</span>');break;}
-      vfs.delete(fn);
-      openTabs=openTabs.filter(t=>t!==fn);
-      if(activeFile===fn){activeFile=openTabs[0]||null;editor.value=activeFile?vfs.get(activeFile)||'':'';}
-      renderFileList();renderTabs();
-      tprint('<span style="color:var(--accent2)">Deleted: '+escHtml(fn)+'</span>');break;
-    }
-    case 'save':
-      if(activeFile)vfs.set(activeFile,editor.value);
-      tprint('<span style="color:var(--accent2)">Saved: '+(activeFile||'none')+'</span>');break;
-    case 'date':tprint('<span style="color:var(--fg)">'+new Date().toString()+'</span>');break;
-    case 'echo':tprint('<span style="color:var(--fg)">'+escHtml(parts.slice(1).join(' '))+'</span>');break;
-    case 'version':tprint('<span style="color:var(--accent2)">Snake Lang v1.0 — Snake IDE v1.0</span>');break;
-    default:tprint('<span style="color:var(--red)">Unknown command: '+escHtml(c)+'. Type <b>help</b> for commands.</span>');
-  }
-}
-</script>
-<script>
-// ═══════════════════════════════════════════════════════
-//  FIND BAR
-// ═══════════════════════════════════════════════════════
-let findMatches=[], findIdx=0, matchCase=false, useRegex=false;
-
-function openFindBar(){
-  const fb=document.getElementById('find-bar');
-  fb.classList.add('visible');
-  document.getElementById('find-input').focus();
-}
-function closeFindBar(){
-  document.getElementById('find-bar').classList.remove('visible');
-  findMatches=[];
-  document.getElementById('find-count').textContent='';
-}
-function toggleCase(){
-  matchCase=!matchCase;
-  document.getElementById('btn-case').classList.toggle('active',matchCase);
-  doFind();
-}
-function toggleRegex(){
-  useRegex=!useRegex;
-  document.getElementById('btn-regex').classList.toggle('active',useRegex);
-  doFind();
-}
-function doFind(){
-  const q=document.getElementById('find-input').value;
-  findMatches=[];
-  if(!q){document.getElementById('find-count').textContent='';return;}
-  const code=editor.value;
-  try{
-    const flags=matchCase?'g':'gi';
-    const pattern=useRegex?new RegExp(q,flags):new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
-    let m;
-    while((m=pattern.exec(code))!==null)findMatches.push({start:m.index,end:m.index+m[0].length});
-  }catch(e){}
-  document.getElementById('find-count').textContent=findMatches.length?`${Math.min(findIdx+1,findMatches.length)}/${findMatches.length}`:'0 results';
-  if(findMatches.length){
-    findIdx=Math.min(findIdx,findMatches.length-1);
-    selectMatch(findIdx);
-  }
-}
-function findNext(){
-  if(!findMatches.length)return;
-  findIdx=(findIdx+1)%findMatches.length;
-  selectMatch(findIdx);
-}
-function findPrev(){
-  if(!findMatches.length)return;
-  findIdx=(findIdx-1+findMatches.length)%findMatches.length;
-  selectMatch(findIdx);
-}
-function selectMatch(i){
-  const m=findMatches[i];
-  if(!m)return;
-  editor.focus();
-  editor.selectionStart=m.start;
-  editor.selectionEnd=m.end;
-  document.getElementById('find-count').textContent=`${i+1}/${findMatches.length}`;
-  // scroll into view
-  const lines=editor.value.slice(0,m.start).split('\n');
-  editor.scrollTop=(lines.length-3)*21;
-}
-function replaceOne(){
-  if(!findMatches.length)return;
-  const rep=document.getElementById('replace-input').value;
-  const m=findMatches[findIdx];
-  if(!m)return;
-  editor.value=editor.value.slice(0,m.start)+rep+editor.value.slice(m.end);
-  updateEditor();doFind();
-}
-function replaceAll(){
-  const q=document.getElementById('find-input').value;
-  const rep=document.getElementById('replace-input').value;
-  if(!q)return;
-  try{
-    const flags=matchCase?'g':'gi';
-    const pattern=useRegex?new RegExp(q,flags):new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
-    editor.value=editor.value.replace(pattern,rep);
-    updateEditor();doFind();
-  }catch(e){}
-}
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeFindBar();
 });
+function toggleComment(){
+  const s=ed().selectionStart,v=ed().value;
+  const ls=v.lastIndexOf('\n',s-1)+1;
+  const le=v.indexOf('\n',s);const end=le===-1?v.length:le;
+  const line=v.slice(ls,end);
+  const nl=line.trimStart().startsWith('#')?line.replace(/^(\s*)#\s?/,'$1'):line.replace(/^(\s*)/,'$1# ');
+  ed().value=v.slice(0,ls)+nl+v.slice(end);
+  const d=nl.length-line.length;ed().selectionStart=s+d;ed().selectionEnd=s+d;
+  syncEditor();
+}
+
+// ── Autocomplete ──────────────────────────────────────────────
+const AC_LIST=[...KWS.map(w=>({w,t:'kw'})),...BIS.map(w=>({w,t:'builtin'})),
+  {w:'PI',t:'const'},{w:'E',t:'const'},{w:'INF',t:'const'}];
+let acSel=0,acWords=[];
+function showAC(){
+  const s=ed().selectionStart,before=ed().value.slice(0,s);
+  const m=before.match(/[a-zA-Z_]\w*$/);const prefix=m?m[0]:'';
+  acWords=AC_LIST.filter(a=>a.w.startsWith(prefix)&&a.w!==prefix);
+  if(!acWords.length){hideAC();return;}
+  acSel=0;
+  const ac=document.getElementById('ac');
+  ac.innerHTML=acWords.map((a,i)=>
+    `<div class="ac-i ${i===0?'sel':''}" data-word="${a.w}" onclick="applyAC('${a.w}')">
+      ${a.w}<span class="ac-t">${a.t}</span>
+    </div>`
+  ).join('');
+  // position near cursor
+  const rect=ed().getBoundingClientRect();
+  const lines=ed().value.slice(0,s).split('\n');
+  const row=lines.length,col=lines[lines.length-1].length;
+  ac.style.left=(rect.left+44+col*7.8-ed().scrollLeft)+'px';
+  ac.style.top=(rect.top+row*20-ed().scrollTop+20)+'px';
+  ac.style.display='block';
+}
+function acNav(d){
+  acSel=Math.max(0,Math.min(acWords.length-1,acSel+d));
+  document.querySelectorAll('.ac-i').forEach((el,i)=>el.classList.toggle('sel',i===acSel));
+  document.querySelectorAll('.ac-i')[acSel]?.scrollIntoView({block:'nearest'});
+}
+function applyAC(word){
+  const s=ed().selectionStart,before=ed().value.slice(0,s);
+  const m=before.match(/[a-zA-Z_]\w*$/);const prefix=m?m[0]:'';
+  const start=s-prefix.length;
+  ed().value=ed().value.slice(0,start)+word+ed().value.slice(s);
+  ed().selectionStart=ed().selectionEnd=start+word.length;
+  hideAC();syncEditor();
+}
+function hideAC(){document.getElementById('ac').style.display='none';}
+document.addEventListener('click',e=>{if(!document.getElementById('ac').contains(e.target))hideAC();});
 </script>
 <script>
-// ═══════════════════════════════════════════════════════
-//  RUN ENGINE + INIT
-// ═══════════════════════════════════════════════════════
+// ── Terminal ──────────────────────────────────────────────────
+let termHist=[],termHistIdx=-1;
+function tlog(msg,cls){
+  const d=document.createElement('div');
+  d.className='tl'+(cls?' '+cls:'');
+  d.textContent=msg;
+  const out=document.getElementById('panel-terminal');
+  out.appendChild(d);out.scrollTop=out.scrollHeight;
+}
+function clearPanel(){
+  document.getElementById('panel-terminal').innerHTML='';
+  document.getElementById('panel-output').innerHTML='';
+}
+function switchPanel(name){
+  document.querySelectorAll('.ptab').forEach((t,i)=>t.classList.toggle('active',['terminal','output'][i]===name));
+  document.querySelectorAll('.tpanel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+}
+document.getElementById('term-in').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const cmd=e.target.value.trim();if(!cmd)return;
+    termHist.unshift(cmd);termHistIdx=-1;
+    tlog('snake:~$ '+cmd,'cmd');
+    e.target.value='';
+    runCmd(cmd);
+  }
+  if(e.key==='ArrowUp'){termHistIdx=Math.min(termHistIdx+1,termHist.length-1);e.target.value=termHist[termHistIdx]||'';}
+  if(e.key==='ArrowDown'){termHistIdx=Math.max(termHistIdx-1,-1);e.target.value=termHistIdx>=0?termHist[termHistIdx]:'';}
+  if(e.ctrlKey&&e.key==='l'){e.preventDefault();clearPanel();}
+});
+function runCmd(cmd){
+  const p=cmd.trim().split(/\s+/);
+  switch(p[0]){
+    case 'help':
+      ['run          — run current file','run <file>   — run specific file',
+       'clear        — clear terminal','ls           — list files',
+       'cat <file>   — show file content','new <name>   — create file',
+       'rm <name>    — delete file','save         — save current file',
+       'date         — show date/time','echo <text>  — print text',
+       'version      — show version'].forEach(l=>tlog('  '+l));break;
+    case 'run':runFile(p[1]||activeFile);break;
+    case 'clear':clearPanel();break;
+    case 'ls':[...vfs.keys()].forEach(n=>tlog('  '+(n===activeFile?'> ':' ')+n));break;
+    case 'cat':{const c=vfs.get(p[1]);c!==undefined?tlog(c):tlog('Not found: '+p[1],'err');break;}
+    case 'new':{const n=p[1];if(!n){tlog('Usage: new <name>','warn');break;}const name=n.includes('.')?n:n+'.snk';vfs.set(name,'');openFile(name);tlog('Created: '+name,'ok');break;}
+    case 'rm':{if(!p[1]){tlog('Usage: rm <name>','warn');break;}if(!vfs.has(p[1])){tlog('Not found: '+p[1],'err');break;}deleteFile(p[1]);break;}
+    case 'save':saveFile();break;
+    case 'date':tlog(new Date().toLocaleString());break;
+    case 'echo':tlog(p.slice(1).join(' '));break;
+    case 'version':tlog('Snake IDE v3.0 — Snake Lang v3.0');break;
+    default:tlog("Unknown: '"+p[0]+"' — type 'help'","err");
+  }
+}
+
+// ── Find ──────────────────────────────────────────────────────
+const Find={
+  matches:[],idx:0,_case:false,_regex:false,
+  search(q){
+    this.matches=[];this.idx=0;
+    if(!q){document.getElementById('find-count').textContent='';return;}
+    try{
+      const flags=this._case?'g':'gi';
+      const pat=this._regex?new RegExp(q,flags):new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);
+      let m;const text=ed().value;
+      while((m=pat.exec(text))!==null)this.matches.push({s:m.index,e:m.index+m[0].length});
+    }catch{}
+    document.getElementById('find-count').textContent=this.matches.length?(this.idx+1)+'/'+this.matches.length:'No results';
+    if(this.matches.length)this._sel(0);
+  },
+  key(e){if(e.key==='Enter'){e.shiftKey?this.prev():this.next();}if(e.key==='Escape')toggleFind(false);},
+  next(){if(!this.matches.length)return;this.idx=(this.idx+1)%this.matches.length;this._sel(this.idx);},
+  prev(){if(!this.matches.length)return;this.idx=(this.idx-1+this.matches.length)%this.matches.length;this._sel(this.idx);},
+  _sel(i){const m=this.matches[i];ed().focus();ed().setSelectionRange(m.s,m.e);document.getElementById('find-count').textContent=(i+1)+'/'+this.matches.length;ed().scrollTop=Math.max(0,ed().value.slice(0,m.s).split('\n').length*20-100);},
+  toggleCase(){this._case=!this._case;document.getElementById('fb-case').classList.toggle('on',this._case);this.search(document.getElementById('find-input').value);},
+  toggleRegex(){this._regex=!this._regex;document.getElementById('fb-regex').classList.toggle('on',this._regex);this.search(document.getElementById('find-input').value);},
+  replaceOne(){if(!this.matches.length)return;const m=this.matches[this.idx];const rep=document.getElementById('replace-input').value;ed().value=ed().value.slice(0,m.s)+rep+ed().value.slice(m.e);syncEditor();this.search(document.getElementById('find-input').value);},
+  replaceAll(){const q=document.getElementById('find-input').value,rep=document.getElementById('replace-input').value;if(!q)return;try{const flags=this._case?'g':'gi';const pat=this._regex?new RegExp(q,flags):new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),flags);ed().value=ed().value.replace(pat,rep);syncEditor();this.search(q);}catch{}}
+};
+function toggleFind(show){
+  const fb=document.getElementById('find-bar');
+  if(show===false){fb.classList.remove('show');return;}
+  fb.classList.toggle('show');
+  if(fb.classList.contains('show')){document.getElementById('find-input').focus();document.getElementById('find-input').select();}
+}
+
+// ── Run ───────────────────────────────────────────────────────
 function runCode(){
-  if(activeFile)vfs.set(activeFile,editor.value);
+  if(activeFile)vfs.set(activeFile,ed().value);
   runFile(activeFile);
 }
-
-function runFile(fname){
-  const src=vfs.get(fname)||'';
-  tprint('<span style="color:var(--fg2)">─── Running '+fname+' ───</span>');
-  const lines=[];
-  const interp=new Interpreter(msg=>{
-    tprint('<span style="color:var(--fg)">'+escHtml(String(msg))+'</span>');
-  });
+function runFile(name){
+  const src=vfs.get(name)||'';
+  tlog('--- Running '+name+' ---','info');
+  const t0=performance.now();
   try{
-    interp.run(src);
-    tprint('<span style="color:var(--accent2)">✓ Done</span>');
-  } catch(e){
-    if(e instanceof ThrowSignal){
-      tprint('<span style="color:var(--red)">Uncaught throw: '+escHtml(String(e.val))+'</span>');
-    } else {
-      const loc=e.snakeLine?` (line ${e.snakeLine})`:'';
-      tprint('<span style="color:var(--red)">Error'+loc+': '+escHtml(e.message)+'</span>');
-    }
+    Engine.run(src);
+    tlog('Done in '+(performance.now()-t0).toFixed(1)+'ms','ok');
+  }catch(e){
+    const loc=e.snakeLine?' (line '+e.snakeLine+')':'';
+    tlog('Error'+loc+': '+e.message,'err');
   }
+  document.getElementById('sb-status').textContent='Last run: '+new Date().toLocaleTimeString();
 }
 
-// ── Init ───────────────────────────────────────────────
-(function init(){
-  renderFileList();
-  openFile('main.snk');
-  tprint('<span style="color:var(--accent2)">🐍 Snake IDE v1.0 ready. Type <b>help</b> for commands.</span>');
-  tprint('<span style="color:var(--fg2)">Press <b>Ctrl+Enter</b> to run, <b>Ctrl+Space</b> for autocomplete, <b>Ctrl+F</b> to find.</span>');
-})();
+// ── Init ──────────────────────────────────────────────────────
+renderFiles();
+openFile('main.snk');
 </script>
-</html>
+</body></html>
